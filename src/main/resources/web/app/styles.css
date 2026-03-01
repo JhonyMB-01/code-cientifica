@@ -1,0 +1,45 @@
+/* css */
+body {
+    background-color: #f3f4f6;
+    margin: 0;
+    padding: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+/* Contenedor con fondo blanco semitransparente */
+.bg-white {
+    background-color: rgba(255, 255, 255, 0.9);
+    position: relative; /* necesario para posicionar el pseudo-elemento */
+    overflow: visible;
+    padding-bottom: 160px; /* reservar espacio para la imagen inferior */
+}
+
+/* Mostrar la imagen en la parte inferior centrada del formulario */
+.bg-white::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 8px; /* ajuste fino de distancia desde la base */
+    width: 240px;
+    height: 120px;
+    background-image: url('./assets/logo.png');
+    background-size: contain;
+    background-position: center bottom;
+    background-repeat: no-repeat;
+    pointer-events: none;
+    opacity: 0.95;
+    filter: drop-shadow(0 6px 12px rgba(0,0,0,0.08));
+}
+
+/* Ajustes responsivos para pantallas pequeñas */
+@media (max-width: 520px) {
+    .bg-white {
+        padding-bottom: 120px;
+    }
+    .bg-white::after {
+        width: 160px;
+        height: 90px;
+        bottom: 6px;
+    }
+}

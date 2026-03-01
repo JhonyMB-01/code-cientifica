@@ -1,0 +1,136 @@
+<!-- html
+Path: src/main/resources/web/index.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generar Documento</title>
+    {#bundle /}
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="/static/bundle/styles.css" rel="stylesheet" >
+</head>
+<body class="bg-gray-100">
+<div id="app" class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl m-8">
+    <div class="p-8">
+        <h1 class="uppercase tracking-wide text-sm text-indigo-500 font-semibold mb-4">{{ title }}</h1>
+        <form @submit.prevent="submitForm" class="space-y-4" novalidate>
+            <div>
+                <label for="code" class="block text-gray-700 text-sm font-bold mb-2">CODIGO:</label>
+                <input v-model="formData.code" :disabled="loading" type="text" id="code" required
+                       class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+            </div>
+            <div>
+                <button type="submit"
+                        :disabled="loading"
+                        class="bg-blue-500 hover:bg-blue-700 disabled:opacity-60 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    <span v-if="!loading">Procesar</span>
+                    <span v-else>Procesando...</span>
+                </button>
+            </div>
+        </form>
+        <!-- Mensaje de éxito -->
+        <p v-if="mensaje" class="mt-4 text-green-600">{{ mensaje }}</p>
+        <!-- Mensaje de error -->
+        <p v-if="error" class="mt-4 text-red-600">{{ error }}</p>
+    </div>
+</div>
+
+<script type="module">
+    const { createApp, ref } = Vue
+
+    createApp({
+        setup() {
+            const title = ref('Generar Documento')
+            const formData = ref({
+                code: ''
+            })
+            const mensaje = ref('')
+            const error = ref('')
+            const loading = ref(false)
+
+            function filenameFromDisposition(disposition, fallback) {
+                if (!disposition) return fallback
+                const reUtf8 = /filename\*=UTF-8''([^;]+)/i
+                const reName = /filename\=\"?([^\";]+)\"?/i
+                let m = reUtf8.exec(disposition)
+                if (m && m[1]) {
+                    try { return decodeURIComponent(m[1]); } catch (e) {}
+                }
+                m = reName.exec(disposition)
+                if (m && m[1]) return m[1]
+                return fallback
+            }
+
+            const submitForm = async () => {
+                mensaje.value = ''
+                error.value = ''
+                const code = (formData.value.code || '').trim()
+                if (!code) {
+                    error.value = 'El código es requerido.'
+                    return
+                }
+
+                loading.value = true
+                try {
+                    const url = '/document/v3/' + encodeURIComponent(code)
+                    const resp = await fetch(url, { method: 'GET' })
+
+                    if (resp.status === 404) {
+                        error.value = 'Código no encontrado.'
+                        return
+                    }
+                    if (resp.status === 400) {
+                        const txt = await resp.text()
+                        error.value = txt || 'Solicitud inválida.'
+                        return
+                    }
+                    if (resp.status >= 400) {
+                        error.value = 'Error del servidor: ' + resp.status
+                        return
+                    }
+
+                    const blob = await resp.blob()
+
+                    // Si el servidor devolvió texto pequeño en lugar de archivo, mostrar como error
+                    if (blob.type && blob.type.startsWith('text') && blob.size < 5 * 1024) {
+                        const text = await blob.text()
+                        error.value = text || 'Respuesta inesperada.'
+                        return
+                    }
+
+                    const disposition = resp.headers.get('content-disposition')
+                    const fallbackName = 'document_' + code + '.docx'
+                    const filename = filenameFromDisposition(disposition, fallbackName)
+
+                    const urlObj = window.URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = urlObj
+                    a.download = filename
+                    document.body.appendChild(a)
+                    a.click()
+                    a.remove()
+                    window.URL.revokeObjectURL(urlObj)
+
+                    mensaje.value = 'Descarga iniciada.'
+                } catch (e) {
+                    error.value = 'Error al procesar la solicitud.'
+                } finally {
+                    loading.value = false
+                }
+            }
+
+            return {
+                title,
+                formData,
+                mensaje,
+                error,
+                loading,
+                submitForm
+            }
+        }
+    }).mount('#app')
+</script>
+</body>
+</html>

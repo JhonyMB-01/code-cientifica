@@ -12,9 +12,11 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.docx4j.TextUtils;
 import org.docx4j.model.fields.merge.DataFieldName;
 import org.docx4j.model.fields.merge.MailMerger;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
+import org.docx4j.wml.Text;
 
 
 import java.io.File;
@@ -24,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -31,8 +34,8 @@ import java.util.Map;
 public class DocumentResource {
 
     private static final String EXCEL_PATH = "C:/cientifica/Registro_CIEI2024.xlsx";
-    //private static final String EXCEL_PATH = "C:/cientifica/Libro1.xlsx";
-    private static final String WORD_PATH = "C:/cientifica/documento.docx";
+    private static final String WORD_PATH = "C:/cientifica/Prueba1.docx";
+
     // Columna F -> índice 5 (A=0)
     private static final int CODIGO_COLUMN = 5;
 
@@ -60,20 +63,15 @@ public class DocumentResource {
                 Cell cell = row.getCell(CODIGO_COLUMN);
                 String cellValue = getCellString(cell);
                 if (cellValue != null && cellValue.equalsIgnoreCase(codigoBuscado)) {
-                    /*datos = new HashMap<>();
+                    datos = new HashMap<>();
                     datos.put("Codigo", getCellString(row.getCell(CODIGO_COLUMN)));
                     datos.put("Nombre", getCellString(row.getCell(3)));
-                    datos.put("Descripcion", getCellString(row.getCell(2)));*/
-
-                    datos2 = new HashMap<>();
-                    datos2.put(new DataFieldName("Codigo"), getCellString(row.getCell(CODIGO_COLUMN)));
-                    datos2.put(new DataFieldName("Nombre"), getCellString(row.getCell(3)));
-                    datos2.put(new DataFieldName("Descripcion"), getCellString(row.getCell(2)));
+                    datos.put("Descripcion", getCellString(row.getCell(2)));
                     break;
                 }
             }
 
-            if (datos2 == null) {
+            if (datos == null) {
                 return Response.status(Response.Status.NOT_FOUND)
                         .entity("Código no encontrado en Excel").build();
             }
@@ -81,17 +79,7 @@ public class DocumentResource {
             // Cargar Word
             WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(new File(WORD_PATH));
 
-            // Reemplazar placeholders en Word
-            /*datos.forEach((k, v) -> {
-                try {
-                    wordMLPackage.getMainDocumentPart().variableReplace(Collections.singletonMap(k, v));
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            });*/
 
-            // Ejecutar Mail Merge
-            MailMerger.performMerge(wordMLPackage, datos2, true);
 
             // Crear carpeta de salida si no existe
             Path outputDir = Path.of("C:/docs");
