@@ -5,6 +5,7 @@ import contancia.config.DocumentConfig;
 import contancia.service.PdfService;
 import contancia.service.WordService;
 import extencion.dto.GenerarDocumentoRequest;
+import extencion.dto.GenerarPdfResponse;
 import extencion.model.ExtensionExcelData;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -96,7 +97,7 @@ public class DocumentExtencionService {
     /**
      * Genera el documento PDF final.
      */
-    public byte[] generarPdf(
+    public GenerarPdfResponse generarPdf(
             GenerarDocumentoRequest request) throws Exception {
 
         /*
@@ -142,9 +143,10 @@ public class DocumentExtencionService {
             /*
              * 3. Convertir DOCX → PDF.
              */
-            return pdfService.convertirDocxAPdf(
-                    docx
-            );
+            return new GenerarPdfResponse(
+                    pdfService.convertirDocxAPdf(docx),
+                    data.getCodigo().concat("_Extension Ref.")
+                            .concat(data.getConstancia()).concat(".pdf"));
 
         } finally {
 

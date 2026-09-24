@@ -43,21 +43,5 @@ public class Constantes {
     public final static String CODE_0 = "0.0";
 }
 
-/*
-${ParrafoDentroUniversidad}
-
-${ParrafoExternoUniversidad}
-
-${ParrafoValidacionInstrumento}
-
-${ParrafoAprobacionEstudio}
-
-${ParrafoAprobacionProyecto}
-
-${ParrafoVigenciaAprobacion}
-
-${ParrafoAprobacionCiei}
-
- */
 
 

@@ -1,6 +1,7 @@
 package extencion.controller;
 
 import extencion.dto.GenerarDocumentoRequest;
+import extencion.dto.GenerarPdfResponse;
 import extencion.service.DocumentExtencionService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -77,17 +78,10 @@ public class ExtencionController {
 
         try {
 
-            String codigoLimpio = request.getCodigo().trim();
+            GenerarPdfResponse pdfResponse = extencionService.generarPdf(request);
 
-            byte[] documento =
-                    extencionService.generarPdf(
-                            request
-                    );
-
-            String nombreArchivo =
-                    "output_" +
-                            codigoLimpio +
-                            ".pdf";
+            byte[] documento = pdfResponse.getPdfContent();
+            String nombreArchivo = pdfResponse.getNamePdfGenerate();
 
             return Response.ok(documento)
                     .header("Content-Disposition", "attachment; filename=\"" + nombreArchivo + "\"")
