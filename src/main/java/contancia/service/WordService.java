@@ -20,21 +20,16 @@ import java.util.Map;
 public class WordService {
 
     @Inject
-    DocumentConfig documentConfig;
-
-    @Inject
     WordTemplateProcessor templateProcessor;
 
 
     public Path generarWord(
-            Map<String, String> datos) {
+            Map<String, String> datos, String path) {
 
-        String templatePath =
-                documentConfig.getWordTemplate();
 
         try (
                 FileInputStream fis =
-                        new FileInputStream(templatePath);
+                        new FileInputStream(path);
 
                 XWPFDocument document =
                         new XWPFDocument(fis)

@@ -2,28 +2,21 @@ package extencion.service;
 
 import contancia.DocumentNotFoundException;
 import contancia.config.DocumentConfig;
+import contancia.service.PdfService;
+import contancia.service.WordService;
 import extencion.dto.GenerarDocumentoRequest;
 import extencion.model.ExtensionExcelData;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 
 @ApplicationScoped
 public class DocumentExtencionService {
-    @ConfigProperty(name = "documentos.base-path")
-    String basePath;
-
-    @ConfigProperty(name = "documentos.excel")
-    String excelFile;
-
-    @ConfigProperty(name = "documentos.plantillas-path")
-    String plantillasPath;
-
-    @ConfigProperty(name = "documentos.plantilla-extension")
-    String plantillaExtension;
 
     @Inject
     ExtensionExcelService extensionExcelService;
@@ -31,9 +24,13 @@ public class DocumentExtencionService {
     @Inject
     DocumentConfig documentConfig;
 
-    public byte[] generar(
-            GenerarDocumentoRequest request
-    ) throws IOException {
+    @Inject
+    WordService wordService;
+
+    @Inject
+    PdfService pdfService;
+
+    public byte[] generarWord(GenerarDocumentoRequest request) throws IOException {
 
         validarRequest(request);
 
@@ -46,9 +43,8 @@ public class DocumentExtencionService {
             );
         }
 
-        Path excelPath =
-                Path.of(basePath)
-                        .resolve(excelFile);
+        Path excelPath = Path.of(documentConfig.getBasePath())
+                .resolve(documentConfig.getExcelFile());
 
         ExtensionExcelData data =
                 extensionExcelService.buscarPorCodigo(
@@ -65,12 +61,97 @@ public class DocumentExtencionService {
             );
         }
 
-        /*Path plantilla =
-                Path.of(basePath)
-                        .resolve(plantillasPath)
-                        .resolve(plantillaExtension);*/
 
-        return null;
+
+        Path plantilla =
+                Path.of(documentConfig.getBasePath())
+                        .resolve(documentConfig.getPlantillasPath())
+                        .resolve(documentConfig.getPlantillaExtension());
+
+        /*
+         * 2. Generar DOCX.
+         */
+        Path docx =
+                null;
+
+        try {
+
+            docx =
+                    wordService.generarWord(
+                            construirValores(data), plantilla.toString()
+                    );
+
+            return Files.readAllBytes(
+                    docx
+            );
+
+        } finally {
+
+            eliminarTemporal(
+                    docx
+            );
+        }
+    }
+
+    /**
+     * Genera el documento PDF final.
+     */
+    public byte[] generarPdf(
+            GenerarDocumentoRequest request) throws Exception {
+
+        /*
+         * 1. Obtener datos desde Excel.
+         */
+        Path excelPath = Path.of(documentConfig.getBasePath())
+                .resolve(documentConfig.getExcelFile());
+
+        ExtensionExcelData data =
+                extensionExcelService.buscarPorCodigo(
+                        excelPath,
+                        request.getCodigo()
+                );
+
+        if (data == null) {
+
+            throw new DocumentNotFoundException(
+                    "No se encontró el código '"
+                            + request.getCodigo()
+                            + "' en la hoja Extensión"
+            );
+        }
+
+        Path plantilla =
+                Path.of(documentConfig.getBasePath())
+                        .resolve(documentConfig.getPlantillasPath())
+                        .resolve(documentConfig.getPlantillaExtension());
+
+
+        Path docx = null;
+
+        try {
+
+            /*
+             * 2. Generar DOCX.
+             */
+            docx =
+                    wordService.generarWord(
+                            construirValores(data), plantilla.toString()
+                    );
+
+
+            /*
+             * 3. Convertir DOCX → PDF.
+             */
+            return pdfService.convertirDocxAPdf(
+                    docx
+            );
+
+        } finally {
+
+            eliminarTemporal(
+                    docx
+            );
+        }
     }
 
     private void validarRequest(
@@ -97,6 +178,79 @@ public class DocumentExtencionService {
             throw new IllegalArgumentException(
                     "El tipoDocumento es obligatorio"
             );
+        }
+    }
+
+    private Map<String, String> construirValores(
+            ExtensionExcelData data
+    ) {
+
+        Map<String, String> valores =
+                new HashMap<>();
+
+        valores.put(
+                "Codigo",
+                valorSeguro(data.getCodigo())
+        );
+
+        valores.put(
+                "Titulo",
+                valorSeguro(data.getTitulo())
+        );
+
+        valores.put(
+                "Investigador",
+                valorSeguro(data.getInvestigador())
+        );
+
+        valores.put(
+                "Constancia",
+                valorSeguro(data.getConstancia())
+        );
+
+        valores.put(
+                "AprHasta",
+                valorSeguro(data.getAprHasta())
+        );
+
+        valores.put(
+                "AprDesde",
+                valorSeguro(data.getAprDesde())
+        );
+
+        return valores;
+    }
+
+    private String valorSeguro(String valor) {
+        return valor == null ? "" : valor;
+    }
+
+    private void eliminarTemporal(
+            Path archivo) {
+
+        if (archivo == null) {
+            return;
+        }
+
+        try {
+
+            Path directorio =
+                    archivo.getParent();
+
+            Files.deleteIfExists(
+                    archivo
+            );
+
+            if (directorio != null) {
+
+                Files.deleteIfExists(
+                        directorio
+                );
+            }
+
+        } catch (Exception ignored) {
+            // No interrumpir la respuesta por
+            // un problema de limpieza temporal.
         }
     }
 

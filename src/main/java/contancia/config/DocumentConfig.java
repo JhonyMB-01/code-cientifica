@@ -17,5 +17,17 @@ public class DocumentConfig {
     @ConfigProperty(name = "document.libreoffice.path")
     String libreOfficePath;
 
+    @ConfigProperty(name = "documentos.base-path")
+    String basePath;
+
+    @ConfigProperty(name = "documentos.excel")
+    String excelFile;
+
+    @ConfigProperty(name = "documentos.plantillas-path")
+    String plantillasPath;
+
+    @ConfigProperty(name = "documentos.plantilla-extension")
+    String plantillaExtension;
+
 
 }

@@ -15,10 +15,7 @@ public class ExtensionExcelService {
 
     private static final String HOJA = "Extensión";
 
-    public ExtensionExcelData buscarPorCodigo(
-            Path excelPath,
-            String codigo
-    ) throws IOException {
+    public ExtensionExcelData buscarPorCodigo(Path excelPath, String codigo) throws IOException {
 
         if (!Files.exists(excelPath)) {
             throw new IllegalStateException(
@@ -61,13 +58,9 @@ public class ExtensionExcelService {
                         .codigo(codigoExcel)
                         .titulo(obtenerValor(row, "F", formatter))
                         .investigador(obtenerValor(row, "G", formatter))
-                        .constanciaAprobacion(
-                                obtenerValor(row, "I", formatter)
-                        )
-                        .valorR(obtenerValor(row, "R", formatter))
-                        .valorT(obtenerValor(row, "T", formatter))
-                        .valorV(obtenerValor(row, "V", formatter))
-                        .valorW(obtenerValor(row, "W", formatter))
+                        .aprDesde(obtenerValor(row, "M", formatter))
+                        .aprHasta(obtenerValor(row, "N", formatter))
+                        .constancia(obtenerValor(row, "W", formatter))
                         .build();
             }
 

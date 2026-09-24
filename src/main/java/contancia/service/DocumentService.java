@@ -1,5 +1,6 @@
 package contancia.service;
 import contancia.DocumentNotFoundException;
+import contancia.config.DocumentConfig;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -18,6 +19,9 @@ public class DocumentService {
 
     @Inject
     PdfService pdfService;
+
+    @Inject
+    DocumentConfig documentConfig;
 
     /**
      * Genera el documento Word final.
@@ -42,7 +46,7 @@ public class DocumentService {
 
             docx =
                     wordService.generarWord(
-                            datos
+                            datos, documentConfig.getWordTemplate()
                     );
 
             return Files.readAllBytes(
@@ -80,7 +84,7 @@ public class DocumentService {
              */
             docx =
                     wordService.generarWord(
-                            datos
+                            datos, documentConfig.getWordTemplate()
                     );
 
 

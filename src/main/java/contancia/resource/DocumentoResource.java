@@ -4,18 +4,16 @@ import contancia.DocumentNotFoundException;
 import contancia.service.DocumentService;
 import contancia.service.ExcelService;
 import contancia.service.WordService;
+import extencion.dto.GenerarDocumentoRequest;
 import extencion.service.DocumentExtencionService;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import java.util.Map;
 
-@Path("/document/v4")
+@Path("/document/renovacion/v1")
 public class DocumentoResource {
 
     @Inject
@@ -24,15 +22,17 @@ public class DocumentoResource {
     /**
      * Genera y descarga el documento Word.
      *
-     * GET /document/v3/{codigo}/word
+     * POST /document/v3/word
      */
-    @GET
-    @Path("/{codigo}/word")
+    @POST
+    @Path("/word")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     )
-    public Response generarWord(
-            @PathParam("codigo") String codigo) {
+    public Response generarWord(GenerarDocumentoRequest request) {
+
+        String codigo = request.getCodigo();
 
         if (codigo == null || codigo.trim().isEmpty()) {
 
@@ -97,13 +97,15 @@ public class DocumentoResource {
     /**
      * Genera y descarga el documento PDF.
      *
-     * GET /document/v3/{codigo}/pdf
+     * POST /document/v3/pdf
      */
-    @GET
-    @Path("/{codigo}/pdf")
+    @POST
+    @Path("/pdf")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces("application/pdf")
-    public Response generarPdf(
-            @PathParam("codigo") String codigo) {
+    public Response generarPdf(GenerarDocumentoRequest request) {
+
+        String codigo = request.getCodigo();
 
         if (codigo == null || codigo.trim().isEmpty()) {
 

@@ -18,6 +18,7 @@ import java.nio.file.Path;
 import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -212,51 +213,329 @@ public class old {
         }
     }
 
-    private void reemplazarEnParrafos(java.util.List<XWPFParagraph> paragraphs, Map<String, String> datos) {
+    private void reemplazarEnParrafos( java.util.List<XWPFParagraph> paragraphs, Map<String, String> datos)
+    { for (XWPFParagraph paragraph : paragraphs)
+    {
+        if (paragraph == null) { continue; }
+        reemplazarEnParrafo(paragraph, datos);
+    }
+    }
 
-        for (XWPFParagraph p : paragraphs) {
-            String fullText = p.getText();
-            if (fullText != null && !fullText.isEmpty()) {
-                boolean contienePlaceholder = false;
-                for (Map.Entry<String, String> entry : datos.entrySet()) {
-                    String placeholder = "${" + entry.getKey() + "}";
-                    if (fullText.contains(placeholder)) {
-                        fullText = fullText.replace(placeholder, entry.getValue());
-                        contienePlaceholder = true;
-                    }
-                }
+    private void reemplazarEnParrafo(
+            XWPFParagraph paragraph,
+            Map<String, String> datos) {
 
-                if (contienePlaceholder) {
-                    // Guardar estilo del primer run
-                    XWPFRun estiloBase = p.getRuns().isEmpty() ? null : p.getRuns().get(0);
+        /*
+         * Construimos el texto completo del párrafo a partir
+         * de todos sus Run.
+         *
+         * Esto permite detectar placeholders aunque Word
+         * los haya dividido en varios Run.
+         */
+        StringBuilder textoCompleto = new StringBuilder();
 
-                    // Eliminar runs originales
-                    int runCount = p.getRuns().size();
-                    for (int i = runCount - 1; i >= 0; i--) {
-                        p.removeRun(i);
-                    }
+        for (XWPFRun run : paragraph.getRuns()) {
 
-                    // Crear run nuevo con el texto reemplazado
-                    XWPFRun run = p.createRun();
-                    run.setText(fullText);
+            String textoRun = obtenerTextoRun(run);
 
-                    // Copiar estilo del run original
-                    /*if (estiloBase != null) {
-                        run.setBold(estiloBase.isBold());
-                        run.setItalic(estiloBase.isItalic());
-                        run.setFontFamily(estiloBase.getFontFamily());
-                        run.setFontSize(estiloBase.getFontSize());
-                        run.setColor(estiloBase.getColor());
-                    }*/
-
-                    // Mantener alineación y justificación del párrafo
-                    p.setAlignment(p.getAlignment());
-                    p.setVerticalAlignment(p.getVerticalAlignment());
-                }
+            if (textoRun != null) {
+                textoCompleto.append(textoRun);
             }
         }
 
+        String texto = textoCompleto.toString();
+
+        if (texto.isEmpty()) {
+            return;
+        }
+
+        /*
+         * Buscamos todos los placeholders.
+         *
+         * Ejemplo:
+         *
+         * ${Codigo}
+         * ${Titulo}
+         * ${Investigador}
+         */
+        java.util.regex.Pattern pattern =
+                java.util.regex.Pattern.compile("\\$\\{([^}]+)}");
+
+        java.util.regex.Matcher matcher =
+                pattern.matcher(texto);
+
+        java.util.List<Placeholder> placeholders =
+                new java.util.ArrayList<>();
+
+        while (matcher.find()) {
+
+            String clave = matcher.group(1);
+
+            if (datos.containsKey(clave)) {
+
+                String valor = datos.get(clave);
+
+                if (valor == null) {
+                    valor = "";
+                }
+
+                placeholders.add(
+                        new Placeholder(
+                                matcher.start(),
+                                matcher.end(),
+                                valor
+                        )
+                );
+            }
+        }
+
+        /*
+         * Procesamos desde el último placeholder
+         * hacia el primero.
+         */
+        for (int i = placeholders.size() - 1; i >= 0; i--) {
+
+            reemplazarPlaceholder(
+                    paragraph,
+                    placeholders.get(i)
+            );
+        }
     }
+
+    /**
+     * Reemplaza un placeholder aunque esté dividido
+     * entre varios Run.
+     */
+    private void reemplazarPlaceholder(
+            XWPFParagraph paragraph,
+            Placeholder placeholder) {
+
+        java.util.List<XWPFRun> runs =
+                paragraph.getRuns();
+
+        int posicion = 0;
+
+        int runInicio = -1;
+        int runFin = -1;
+
+        int offsetInicio = -1;
+        int offsetFin = -1;
+
+        /*
+         * Encontrar Run inicial y final.
+         */
+        for (int i = 0; i < runs.size(); i++) {
+
+            String textoRun = obtenerTextoRun(runs.get(i));
+
+            if (textoRun == null) {
+                textoRun = "";
+            }
+
+            int inicio = posicion;
+            int fin = posicion + textoRun.length();
+
+            /*
+             * Run donde comienza ${...
+             */
+            if (runInicio == -1 &&
+                    placeholder.inicio >= inicio &&
+                    placeholder.inicio < fin) {
+
+                runInicio = i;
+                offsetInicio =
+                        placeholder.inicio - inicio;
+            }
+
+            /*
+             * Run donde termina ...}
+             */
+            if (placeholder.fin > inicio &&
+                    placeholder.fin <= fin) {
+
+                runFin = i;
+                offsetFin =
+                        placeholder.fin - inicio;
+
+                break;
+            }
+
+            posicion = fin;
+        }
+
+        /*
+         * Si el placeholder está en un Run vacío o
+         * en una posición límite, intentamos localizarlo
+         * de otra manera.
+         */
+        if (runInicio == -1 || runFin == -1) {
+            return;
+        }
+
+        XWPFRun runInicial = runs.get(runInicio);
+
+        String textoInicial =
+                obtenerTextoRun(runInicial);
+
+        if (textoInicial == null) {
+            textoInicial = "";
+        }
+
+        /*
+         * CASO 1:
+         *
+         * ${Campo} está completamente dentro
+         * del mismo Run.
+         */
+        if (runInicio == runFin) {
+
+            String antes =
+                    textoInicial.substring(0, offsetInicio);
+
+            String despues =
+                    textoInicial.substring(offsetFin);
+
+            String resultado =
+                    antes + placeholder.valor + despues;
+
+            /*
+             * IMPORTANTE:
+             *
+             * No eliminamos el Run.
+             *
+             * De esta forma se conserva:
+             *
+             * - negrita
+             * - cursiva
+             * - fuente
+             * - tamaño
+             * - color
+             * - subrayado
+             */
+            runInicial.setText(resultado, 0);
+
+            return;
+        }
+
+        /*
+         * CASO 2:
+         *
+         * El placeholder está dividido entre
+         * varios Run.
+         *
+         * Ejemplo:
+         *
+         * Run 0: "Hola ${nom"
+         * Run 1: "bre}"
+         *
+         * Resultado:
+         *
+         * Run 0: "Hola Juan"
+         * Run 1: ""
+         */
+
+        String antes =
+                textoInicial.substring(0, offsetInicio);
+
+        XWPFRun runFinal = runs.get(runFin);
+
+        String textoFinal =
+                obtenerTextoRun(runFinal);
+
+        if (textoFinal == null) {
+            textoFinal = "";
+        }
+
+        String despues =
+                textoFinal.substring(offsetFin);
+
+        /*
+         * Colocamos el valor en el Run inicial.
+         *
+         * Por tanto el valor hereda el formato del
+         * placeholder original.
+         */
+        runInicial.setText(
+                antes + placeholder.valor,
+                0
+        );
+
+        /*
+         * Conservamos el texto posterior al placeholder.
+         */
+        if (!despues.isEmpty()) {
+
+            runFinal.setText(
+                    despues,
+                    0
+            );
+
+        } else {
+
+            runFinal.setText(
+                    "",
+                    0
+            );
+        }
+
+        /*
+         * Vaciar los Run intermedios.
+         */
+        for (int i = runInicio + 1;
+             i < runFin;
+             i++) {
+
+            runs.get(i).setText("", 0);
+        }
+    }
+
+    /**
+     * Obtiene todo el texto de un XWPFRun.
+     */
+    private String obtenerTextoRun(XWPFRun run) {
+
+        if (run == null) {
+            return "";
+        }
+
+        StringBuilder texto =
+                new StringBuilder();
+
+        int cantidad =
+                run.getCTR().sizeOfTArray();
+
+        for (int i = 0; i < cantidad; i++) {
+
+            String valor = run.getText(i);
+
+            if (valor != null) {
+                texto.append(valor);
+            }
+        }
+
+        return texto.toString();
+    }
+
+    /**
+     * Representa un placeholder encontrado.
+     */
+    private static class Placeholder {
+
+        private final int inicio;
+        private final int fin;
+        private final String valor;
+
+        public Placeholder(
+                int inicio,
+                int fin,
+                String valor) {
+
+            this.inicio = inicio;
+            this.fin = fin;
+            this.valor = valor;
+        }
+    }
+
 
     private static String getCellString(Cell cell) {
         if (cell == null) return null;
@@ -275,6 +554,5 @@ public class old {
             default: return null;
         }
     }
-
 
 }
