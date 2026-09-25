@@ -1,5 +1,3 @@
-<!-- html
-Path: src/main/resources/web/index.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -94,6 +92,58 @@ Path: src/main/resources/web/index.html -->
             </div>
 
 
+            <!-- Imágenes para ENMIENDA -->
+            <div v-if="formData.tipo === 'ENMIENDA'">
+
+                <label
+                        for="imagenes"
+                        class="block text-gray-700 text-sm font-bold mb-2"
+                >
+                    IMÁGENES:
+                </label>
+
+                <input
+                        ref="imagenesInput"
+                        @change="seleccionarImagenes"
+                        :disabled="loading"
+                        type="file"
+                        id="imagenes"
+                        accept="image/*"
+                        multiple
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                >
+
+                <p class="mt-1 text-xs text-gray-500">
+                    Puede seleccionar una o varias imágenes.
+                </p>
+
+
+                <!-- Imágenes seleccionadas -->
+                <div
+                        v-if="formData.imagenes.length > 0"
+                        class="mt-2"
+                >
+
+                    <p class="text-sm font-semibold text-gray-700">
+                        Imágenes seleccionadas:
+                    </p>
+
+                    <ul class="mt-1 text-sm text-gray-600">
+
+                        <li
+                                v-for="imagen in formData.imagenes"
+                                :key="imagen.name + imagen.size + imagen.lastModified"
+                        >
+                            {{ imagen.name }}
+                        </li>
+
+                    </ul>
+
+                </div>
+
+            </div>
+
+
             <!-- Botones -->
             <div class="flex flex-col sm:flex-row gap-3 pt-2">
 
@@ -163,67 +213,157 @@ Path: src/main/resources/web/index.html -->
 
 <script type="module">
 
-    const { createApp, ref } = Vue
+    const {
+        createApp,
+        ref,
+        watch
+    } = Vue
 
 
     createApp({
 
         setup() {
 
-            const title = ref('Generar Documento')
+            const title =
+                ref('Generar Documento')
 
 
-            const formData = ref({
-                code: '',
-                tipo: ''
-            })
+            const formData =
+                ref({
+                    code: '',
+                    tipo: '',
+                    imagenes: []
+                })
 
 
-            const mensaje = ref('')
-            const error = ref('')
-            const loading = ref(false)
-            const formato = ref('')
+            const mensaje =
+                ref('')
+
+            const error =
+                ref('')
+
+            const loading =
+                ref(false)
+
+            const formato =
+                ref('')
+
+
+            const imagenesInput =
+                ref(null)
+
+
+            /*
+             * Cuando el usuario cambia de
+             * ENMIENDA a cualquier otro tipo,
+             * se limpian las imágenes.
+             *
+             * Esto limpia tanto:
+             *
+             * 1. El estado de Vue.
+             * 2. El input type="file".
+             */
+            watch(
+                () => formData.value.tipo,
+
+                (nuevoTipo) => {
+
+                    if (nuevoTipo !== 'ENMIENDA') {
+
+                        formData.value.imagenes = []
+
+
+                        /*
+                         * Limpiar el input físico
+                         * para que tampoco quede
+                         * visible el nombre de los
+                         * archivos seleccionados.
+                         */
+                        if (imagenesInput.value) {
+
+                            imagenesInput.value.value = ''
+
+                        }
+
+                    }
+
+                }
+            )
 
 
             /*
              * Obtiene el nombre del archivo
              * desde Content-Disposition.
              */
-            function filenameFromDisposition(disposition, fallback) {
+            function filenameFromDisposition(
+                disposition,
+                fallback
+            ) {
 
                 if (!disposition) {
+
                     return fallback
+
                 }
+
 
                 const reUtf8 =
                     /filename\*=UTF-8''([^;]+)/i
+
 
                 const reName =
                     /filename=\"?([^\";]+)\"?/i
 
 
-                let m = reUtf8.exec(disposition)
+                let m =
+                    reUtf8.exec(disposition)
 
 
                 if (m && m[1]) {
 
                     try {
-                        return decodeURIComponent(m[1])
+
+                        return decodeURIComponent(
+                            m[1]
+                        )
+
                     } catch (e) {
+
                     }
 
                 }
 
 
-                m = reName.exec(disposition)
+                m =
+                    reName.exec(disposition)
 
 
                 if (m && m[1]) {
+
                     return m[1]
+
                 }
 
 
                 return fallback
+
+            }
+
+
+            /*
+             * Guardar imágenes seleccionadas.
+             */
+            function seleccionarImagenes(event) {
+
+                const files =
+                    Array.from(
+                        event.target.files || []
+                    )
+
+
+                formData.value.imagenes =
+                    files
+
             }
 
 
@@ -231,267 +371,472 @@ Path: src/main/resources/web/index.html -->
              * Generar documento.
              *
              * tipoFormato:
+             *
              *   - word
              *   - pdf
              */
-            const generarDocumento = async (tipoFormato) => {
+            const generarDocumento =
+                async (tipoFormato) => {
 
-                mensaje.value = ''
-                error.value = ''
+                    mensaje.value = ''
 
-
-                const codigo =
-                    (formData.value.code || '').trim()
-
-
-                const tipoDocumento =
-                    formData.value.tipo
-
-
-                /*
-                 * Validación del código
-                 */
-                if (!codigo) {
-
-                    error.value =
-                        'El código es requerido.'
-
-                    return
-                }
-
-
-                /*
-                 * Validación del tipo
-                 */
-                if (!tipoDocumento) {
-
-                    error.value =
-                        'Debe seleccionar un tipo de documento.'
-
-                    return
-                }
-
-
-                loading.value = true
-                formato.value = tipoFormato
-
-
-                try {
-
-                    /*
-                     * Mapeo del tipo seleccionado
-                     * al path del endpoint.
-                     *
-                     * EXTENSION  -> extencion
-                     * RENOVACION -> renovacion
-                     * ENMIENDA   -> enmienda
-                     */
-                    const endpointTipo = {
-
-                        EXTENSION: 'extencion',
-
-                        RENOVACION: 'renovacion',
-
-                        ENMIENDA: 'enmienda',
-
-                        CONSTANCIA: 'constancia'
-
-                    }[tipoDocumento]
+                    error.value = ''
 
 
                     /*
-                     * Construir URL
+                     * Obtener código.
                      */
-                    const url =
-                        '/document/' +
-                        endpointTipo +
-                        '/v1/' +
+                    const codigo =
+                        (
+                            formData.value.code ||
+                            ''
+                        ).trim()
+
+
+                    /*
+                     * Obtener tipo.
+                     */
+                    const tipoDocumento =
+                        formData.value.tipo
+
+
+                    /*
+                     * Validación del código.
+                     */
+                    if (!codigo) {
+
+                        error.value =
+                            'El código es requerido.'
+
+                        return
+
+                    }
+
+
+                    /*
+                     * Validación del tipo.
+                     */
+                    if (!tipoDocumento) {
+
+                        error.value =
+                            'Debe seleccionar un tipo de documento.'
+
+                        return
+
+                    }
+
+
+                    /*
+                     * Validación de imágenes
+                     * para ENMIENDA.
+                     */
+                    if (
+                        tipoDocumento === 'ENMIENDA' &&
+                        formData.value.imagenes.length === 0
+                    ) {
+
+                        error.value =
+                            'Debe seleccionar al menos una imagen para la enmienda.'
+
+                        return
+
+                    }
+
+
+                    loading.value = true
+
+                    formato.value =
                         tipoFormato
 
 
-                    /*
-                     * Request que espera el backend:
-                     *
-                     * {
-                     *   "codigo": "POS-48-2023-00011",
-                     *   "tipoDocumento": "EXTENSION"
-                     * }
-                     */
-                    const request = {
+                    try {
 
-                        codigo: codigo,
+                        /*
+                         * Mapeo del tipo seleccionado
+                         * al path del endpoint.
+                         */
+                        const endpointTipo = {
 
-                        tipoDocumento: tipoDocumento
+                            EXTENSION:
+                                'extencion',
 
-                    }
+                            RENOVACION:
+                                'renovacion',
 
+                            ENMIENDA:
+                                'enmienda',
 
-                    console.log('POST:', url)
-                    console.log('Request:', request)
+                            CONSTANCIA:
+                                'constancia'
 
-
-                    /*
-                     * Ejecutar POST
-                     */
-                    const resp = await fetch(url, {
-
-                        method: 'POST',
-
-                        headers: {
-
-                            'Content-Type':
-                                'application/json',
-
-                            'Accept':
-                                tipoFormato === 'pdf'
-                                    ? 'application/pdf'
-                                    : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-
-                        },
-
-                        body: JSON.stringify(request)
-
-                    })
+                        }[tipoDocumento]
 
 
-                    /*
-                     * Errores HTTP
-                     */
-                    if (resp.status === 400) {
-
-                        const txt =
-                            await resp.text()
-
-                        error.value =
-                            txt ||
-                            'Solicitud inválida.'
-
-                        return
-                    }
+                        /*
+                         * Construir URL.
+                         */
+                        const url =
+                            '/document/' +
+                            endpointTipo +
+                            '/v1/' +
+                            tipoFormato
 
 
-                    if (resp.status === 404) {
-
-                        const txt =
-                            await resp.text()
-
-                        error.value =
-                            txt ||
-                            'Documento no encontrado.'
-
-                        return
-                    }
+                        let resp
 
 
-                    if (resp.status >= 400) {
+                        /*
+                         * ==================================
+                         * ENMIENDA
+                         * ==================================
+                         *
+                         * El backend espera:
+                         *
+                         * @RestForm("codigo")
+                         * @RestForm("imagenes")
+                         *
+                         * Por eso se utiliza FormData.
+                         */
+                        if (
+                            tipoDocumento === 'ENMIENDA'
+                        ) {
 
-                        const txt =
-                            await resp.text()
-
-                        error.value =
-                            txt ||
-                            'Error del servidor: ' +
-                            resp.status
-
-                        return
-                    }
+                            const form =
+                                new FormData()
 
 
-                    /*
-                     * Obtener archivo
-                     */
-                    const blob =
-                        await resp.blob()
+                            /*
+                             * Agregar código.
+                             */
+                            form.append(
+                                'codigo',
+                                codigo
+                            )
 
 
-                    /*
-                     * Obtener nombre enviado
-                     * por el backend.
-                     */
-                    const disposition =
-                        resp.headers.get(
-                            'content-disposition'
+                            /*
+                             * Agregar todas las imágenes
+                             * utilizando el mismo nombre:
+                             *
+                             * "imagenes"
+                             */
+                            formData.value.imagenes.forEach(
+                                (imagen) => {
+
+                                    form.append(
+                                        'imagenes',
+                                        imagen,
+                                        imagen.name
+                                    )
+
+                                }
+                            )
+
+
+                            console.log(
+                                'POST multipart:',
+                                url
+                            )
+
+
+                            console.log(
+                                'Código:',
+                                codigo
+                            )
+
+
+                            console.log(
+                                'Imágenes:',
+                                formData.value.imagenes
+                            )
+
+
+                            /*
+                             * IMPORTANTE:
+                             *
+                             * No establecer manualmente
+                             * Content-Type.
+                             *
+                             * El navegador agrega
+                             * automáticamente:
+                             *
+                             * multipart/form-data;
+                             * boundary=...
+                             */
+                            resp =
+                                await fetch(
+                                    url,
+                                    {
+
+                                        method: 'POST',
+
+                                        headers: {
+
+                                            'Accept':
+                                                'application/pdf'
+
+                                        },
+
+                                        body: form
+
+                                    }
+                                )
+
+                        } else {
+
+                            /*
+                             * ==================================
+                             * RESTO DE DOCUMENTOS
+                             * ==================================
+                             *
+                             * Se mantiene el comportamiento
+                             * original utilizando JSON.
+                             */
+                            const request = {
+
+                                codigo:
+                                codigo,
+
+                                tipoDocumento:
+                                tipoDocumento
+
+                            }
+
+
+                            console.log(
+                                'POST:',
+                                url
+                            )
+
+
+                            console.log(
+                                'Request:',
+                                request
+                            )
+
+
+                            resp =
+                                await fetch(
+                                    url,
+                                    {
+
+                                        method: 'POST',
+
+                                        headers: {
+
+                                            'Content-Type':
+                                                'application/json',
+
+                                            'Accept':
+                                                tipoFormato === 'pdf'
+
+                                                    ? 'application/pdf'
+
+                                                    : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+
+                                        },
+
+                                        body:
+                                            JSON.stringify(
+                                                request
+                                            )
+
+                                    }
+                                )
+
+                        }
+
+
+                        /*
+                         * ==================================
+                         * ERRORES HTTP
+                         * ==================================
+                         */
+
+                        if (
+                            resp.status === 400
+                        ) {
+
+                            const txt =
+                                await resp.text()
+
+
+                            error.value =
+                                txt ||
+                                'Solicitud inválida.'
+
+
+                            return
+
+                        }
+
+
+                        if (
+                            resp.status === 404
+                        ) {
+
+                            const txt =
+                                await resp.text()
+
+
+                            error.value =
+                                txt ||
+                                'Documento no encontrado.'
+
+
+                            return
+
+                        }
+
+
+                        if (
+                            resp.status >= 400
+                        ) {
+
+                            const txt =
+                                await resp.text()
+
+
+                            error.value =
+                                txt ||
+                                'Error del servidor: ' +
+                                resp.status
+
+
+                            return
+
+                        }
+
+
+                        /*
+                         * ==================================
+                         * OBTENER ARCHIVO
+                         * ==================================
+                         */
+
+                        const blob =
+                            await resp.blob()
+
+
+                        /*
+                         * Obtener nombre enviado
+                         * por el backend.
+                         */
+                        const disposition =
+                            resp.headers.get(
+                                'content-disposition'
+                            )
+
+
+                        /*
+                         * Extensión por defecto.
+                         */
+                        const extension =
+                            tipoFormato === 'pdf'
+                                ? 'pdf'
+                                : 'docx'
+
+
+                        /*
+                         * Nombre por defecto.
+                         */
+                        const fallbackName =
+                            'document_' +
+                            tipoDocumento.toLowerCase() +
+                            '_' +
+                            codigo +
+                            '.' +
+                            extension
+
+
+                        /*
+                         * Obtener nombre final.
+                         */
+                        const filename =
+                            filenameFromDisposition(
+                                disposition,
+                                fallbackName
+                            )
+
+
+                        /*
+                         * Crear URL temporal
+                         * para descargar el archivo.
+                         */
+                        const urlObj =
+                            window.URL.createObjectURL(
+                                blob
+                            )
+
+
+                        const a =
+                            document.createElement(
+                                'a'
+                            )
+
+
+                        a.href =
+                            urlObj
+
+
+                        a.download =
+                            filename
+
+
+                        document.body.appendChild(
+                            a
                         )
 
 
-                    /*
-                     * Nombre por defecto
-                     * en caso de que el backend
-                     * no envíe Content-Disposition.
-                     */
-                    const extension =
-                        tipoFormato === 'pdf'
-                            ? 'pdf'
-                            : 'docx'
+                        a.click()
 
 
-                    const fallbackName =
-                        'document_' +
-                        tipoDocumento.toLowerCase() +
-                        '_' +
-                        codigo +
-                        '.' +
-                        extension
+                        a.remove()
 
 
-                    const filename =
-                        filenameFromDisposition(
-                            disposition,
-                            fallbackName
+                        window.URL.revokeObjectURL(
+                            urlObj
                         )
 
 
-                    /*
-                     * Crear descarga.
-                     */
-                    const urlObj =
-                        window.URL.createObjectURL(blob)
+                        /*
+                         * Mensaje de éxito.
+                         */
+                        mensaje.value =
+                            'Documento ' +
+                            tipoFormato.toUpperCase() +
+                            ' generado correctamente.'
+
+                        /*
+                         * Limpiar el formulario después
+                         * de generar correctamente el documento.
+                         */
+                        formData.value.code = ''
 
 
-                    const a =
-                        document.createElement('a')
+                    } catch (e) {
+
+                        console.error(
+                            'Error generando documento:',
+                            e
+                        )
 
 
-                    a.href = urlObj
-
-                    a.download = filename
-
-                    document.body.appendChild(a)
-
-                    a.click()
-
-                    a.remove()
+                        error.value =
+                            'Error al procesar la solicitud.'
 
 
-                    window.URL.revokeObjectURL(urlObj)
+                    } finally {
 
+                        loading.value =
+                            false
 
-                    mensaje.value =
-                        'Documento ' +
-                        tipoFormato.toUpperCase() +
-                        ' generado correctamente.'
+                        formato.value =
+                            ''
 
-
-                } catch (e) {
-
-                    console.error(
-                        'Error generando documento:',
-                        e
-                    )
-
-
-                    error.value =
-                        'Error al procesar la solicitud.'
-
-                } finally {
-
-                    loading.value = false
-
-                    formato.value = ''
+                    }
 
                 }
-
-            }
 
 
             return {
@@ -507,6 +852,10 @@ Path: src/main/resources/web/index.html -->
                 loading,
 
                 formato,
+
+                imagenesInput,
+
+                seleccionarImagenes,
 
                 generarDocumento
 

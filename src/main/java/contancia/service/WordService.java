@@ -1,6 +1,8 @@
 package contancia.service;
 
+import Enmienda.model.DocumentoImagen;
 import contancia.config.DocumentConfig;
+import contancia.processor.WordImageProcessor;
 import contancia.processor.WordTemplateProcessor;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -14,6 +16,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 @ApplicationScoped
@@ -22,9 +25,12 @@ public class WordService {
     @Inject
     WordTemplateProcessor templateProcessor;
 
+    @Inject
+    WordImageProcessor imageProcessor;
+
 
     public Path generarWord(
-            Map<String, String> datos, String path) {
+            Map<String, String> datos, String path, List<DocumentoImagen> imagenes) {
 
 
         try (
@@ -34,11 +40,27 @@ public class WordService {
                 XWPFDocument document =
                         new XWPFDocument(fis)
         ) {
-
+            /*
+             * 1. Procesar texto
+             */
             templateProcessor.procesarParrafos(
                     document.getParagraphs(),
                     datos
             );
+
+            /*
+             * 2. Procesar imágenes
+             *
+             * Solo Enmienda enviará imágenes.
+             */
+            if (imagenes != null &&
+                    !imagenes.isEmpty()) {
+
+                imageProcessor.procesarImagenes(
+                        document,
+                        imagenes
+                );
+            }
 
             for (XWPFHeader header :
                     document.getHeaderList()) {

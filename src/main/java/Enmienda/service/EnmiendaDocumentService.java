@@ -1,28 +1,30 @@
-package renovacion.service;
+package Enmienda.service;
 
+import Enmienda.model.DocumentoImagen;
+import Enmienda.model.EnmiendaExcelData;
 import contancia.DocumentNotFoundException;
 import contancia.config.DocumentConfig;
 import contancia.service.PdfService;
 import contancia.service.WordService;
 import extencion.dto.GenerarDocumentoRequest;
 import extencion.dto.GenerarPdfResponse;
-import extencion.model.ExtensionExcelData;
-import extencion.service.ExtensionExcelService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import renovacion.model.RenovacionExcelData;
+import renovacion.service.RenovacionExcelService;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @ApplicationScoped
-public class DocumentRenovacionService {
+public class EnmiendaDocumentService {
 
     @Inject
-    RenovacionExcelService renovacionExcelService;
+    EnmiendaExcelService enmiendaExcelService;
 
     @Inject
     DocumentConfig documentConfig;
@@ -33,33 +35,32 @@ public class DocumentRenovacionService {
     @Inject
     PdfService pdfService;
 
-    public byte[] generarWordRenovacion(GenerarDocumentoRequest request) throws IOException {
+    public byte[] generarWordEnmienda(String codigo, List<DocumentoImagen> documentosImagen) throws IOException {
 
-        validarRequest(request);
 
-        if (!"RENOVACION".equalsIgnoreCase(
-                request.getTipoDocumento())) {
+        /*if (!"ENMIENDA".equalsIgnoreCase(
+                codigo)) {
 
             throw new IllegalArgumentException(
                     "Por el momento solamente se encuentra "
-                            + "implementado el documento RENOVACION"
+                            + "implementado el documento ENMIENDA"
             );
-        }
+        }*/
 
         Path excelPath = Path.of(documentConfig.getBasePath())
                 .resolve(documentConfig.getExcelFile());
 
-        RenovacionExcelData data =
-                renovacionExcelService.buscarPorCodigo(
+        EnmiendaExcelData data =
+                enmiendaExcelService.buscarPorCodigo(
                         excelPath,
-                        request.getCodigo()
+                        codigo
                 );
 
         if (data == null) {
 
             throw new DocumentNotFoundException(
                     "No se encontró el código '"
-                            + request.getCodigo()
+                            + codigo
                             + "' en la hoja Extensión"
             );
         }
@@ -69,7 +70,7 @@ public class DocumentRenovacionService {
         Path plantilla =
                 Path.of(documentConfig.getBasePath())
                         .resolve(documentConfig.getPlantillasPath())
-                        .resolve(documentConfig.getPlantillaRenovacion());
+                        .resolve(documentConfig.getPlantillaEnmienda());
 
         /*
          * 2. Generar DOCX.
@@ -81,7 +82,7 @@ public class DocumentRenovacionService {
 
             docx =
                     wordService.generarWord(
-                            construirValores(data), plantilla.toString(), null
+                            construirValores(data), plantilla.toString(), documentosImagen
                     );
 
             return Files.readAllBytes(
@@ -100,7 +101,7 @@ public class DocumentRenovacionService {
      * Genera el documento PDF final.
      */
     public GenerarPdfResponse generarPdf(
-            GenerarDocumentoRequest request) throws Exception {
+            String codigo, List<DocumentoImagen> documentosImagen) throws Exception {
 
         /*
          * 1. Obtener datos desde Excel.
@@ -108,25 +109,25 @@ public class DocumentRenovacionService {
         Path excelPath = Path.of(documentConfig.getBasePath())
                 .resolve(documentConfig.getExcelFile());
 
-        RenovacionExcelData data =
-                renovacionExcelService.buscarPorCodigo(
+        EnmiendaExcelData data =
+                enmiendaExcelService.buscarPorCodigo(
                         excelPath,
-                        request.getCodigo()
+                        codigo
                 );
 
         if (data == null) {
 
             throw new DocumentNotFoundException(
                     "No se encontró el código '"
-                            + request.getCodigo()
-                            + "' en la hoja Extensión"
+                            + codigo
+                            + "' en la hoja Enmienda"
             );
         }
 
         Path plantilla =
                 Path.of(documentConfig.getBasePath())
                         .resolve(documentConfig.getPlantillasPath())
-                        .resolve(documentConfig.getPlantillaRenovacion());
+                        .resolve(documentConfig.getPlantillaEnmienda());
 
 
         Path docx = null;
@@ -138,7 +139,7 @@ public class DocumentRenovacionService {
              */
             docx =
                     wordService.generarWord(
-                            construirValores(data), plantilla.toString(), null
+                            construirValores(data), plantilla.toString(), documentosImagen
                     );
 
 
@@ -147,7 +148,7 @@ public class DocumentRenovacionService {
              */
             return new GenerarPdfResponse(
                     pdfService.convertirDocxAPdf(docx),
-                    data.getCodigo().concat("_Renovación Ref.")
+                    data.getCodigo().concat("_Enmienda Ref.")
                             .concat(data.getConstancia()).concat(".pdf"));
 
         } finally {
@@ -186,7 +187,7 @@ public class DocumentRenovacionService {
     }
 
     private Map<String, String> construirValores(
-            RenovacionExcelData data
+            EnmiendaExcelData data
     ) {
 
         Map<String, String> valores =
@@ -213,24 +214,10 @@ public class DocumentRenovacionService {
         );
 
         valores.put(
-                "AprHasta",
-                valorSeguro(data.getAprHasta())
+                "fechaCiei",
+                valorSeguro(data.getFechaCiei())
         );
 
-        valores.put(
-                "AprDesde",
-                valorSeguro(data.getAprDesde())
-        );
-
-        valores.put(
-                "ventanaDesde",
-                valorSeguro(data.getVentanaDesde())
-        );
-
-        valores.put(
-                "ventanaHasta",
-                valorSeguro(data.getVentanaHasta())
-        );
 
         return valores;
     }

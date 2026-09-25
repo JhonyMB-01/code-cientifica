@@ -79,7 +79,7 @@ public class DocumentExtencionService {
 
             docx =
                     wordService.generarWord(
-                            construirValores(data), plantilla.toString()
+                            construirValores(data), plantilla.toString(), null
                     );
 
             return Files.readAllBytes(
@@ -136,7 +136,7 @@ public class DocumentExtencionService {
              */
             docx =
                     wordService.generarWord(
-                            construirValores(data), plantilla.toString()
+                            construirValores(data), plantilla.toString(), null
                     );
 
 

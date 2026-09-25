@@ -46,7 +46,7 @@ public class DocumentService {
 
             docx =
                     wordService.generarWord(
-                            datos, documentConfig.getWordTemplate()
+                            datos, documentConfig.getWordTemplate(), null
                     );
 
             return Files.readAllBytes(
@@ -84,7 +84,7 @@ public class DocumentService {
              */
             docx =
                     wordService.generarWord(
-                            datos, documentConfig.getWordTemplate()
+                            datos, documentConfig.getWordTemplate(), null
                     );
 
 
