@@ -29,5 +29,17 @@ public class DocumentConfig {
     @ConfigProperty(name = "documentos.plantilla-extension")
     String plantillaExtension;
 
+    @ConfigProperty(name = "documentos.plantilla-renovacion")
+    String plantillaRenovacion;
+
+    @ConfigProperty(name = "documentos.plantilla-enmienda")
+    String plantillaEnmienda;
+
+    @ConfigProperty(name = "documentos.plantilla-constancia-exenta")
+    String plantillaConstanciaExenta;
+
+    @ConfigProperty(name = "documentos.plantilla-constancia")
+    String plantillaConstancia;
+
 
 }

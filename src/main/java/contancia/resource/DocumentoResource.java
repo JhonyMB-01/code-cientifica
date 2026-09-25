@@ -13,7 +13,7 @@ import jakarta.ws.rs.core.Response;
 
 import java.util.Map;
 
-@Path("/document/renovacion/v1")
+@Path("/document/constancia/v1")
 public class DocumentoResource {
 
     @Inject
