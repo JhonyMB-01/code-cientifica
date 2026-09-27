@@ -4,7 +4,7 @@ import Enmienda.model.EnmiendaExcelData;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import renovacion.model.RenovacionExcelData;
+import utils.Utils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -73,9 +73,9 @@ public class EnmiendaExcelService {
                         .codigo(codigoExcel)
                         .titulo(obtenerValor(row, "F", formatter))
                         .investigador(obtenerValor(row, "G", formatter))
-                        .fechaIngreso(obtenerValor(row, "I", formatter))
+                        .fechaIngreso(Utils.formarterFecha(obtenerValor(row, "I", formatter)))
                         .constancia(obtenerValor(row, "W", formatter))
-                        .fechaCiei(fechaCIEI)
+                        .fechaCiei(Utils.formarterFecha(fechaCIEI))
                         .build();
 
             }

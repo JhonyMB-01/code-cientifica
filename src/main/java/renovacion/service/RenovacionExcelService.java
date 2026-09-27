@@ -1,10 +1,10 @@
 package renovacion.service;
 
-import extencion.model.ExtensionExcelData;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import renovacion.model.RenovacionExcelData;
+import utils.Utils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -59,10 +59,10 @@ public class RenovacionExcelService {
                         .codigo(codigoExcel)
                         .titulo(obtenerValor(row, "F", formatter))
                         .investigador(obtenerValor(row, "G", formatter))
-                        .aprDesde(obtenerValor(row, "M", formatter))
-                        .aprHasta(obtenerValor(row, "N", formatter))
-                        .ventanaDesde(obtenerValor(row, "O", formatter))
-                        .ventanaHasta(obtenerValor(row, "P", formatter))
+                        .aprDesde(Utils.formarterFecha(obtenerValor(row, "M", formatter)))
+                        .aprHasta(Utils.formarterFecha(obtenerValor(row, "N", formatter)))
+                        .ventanaDesde(Utils.formarterFecha(obtenerValor(row, "P", formatter)))
+                        .ventanaHasta(Utils.formarterFecha(obtenerValor(row, "Q", formatter)))
                         .constancia(obtenerValor(row, "X", formatter))
                         .build();
             }

@@ -18,6 +18,8 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.mendoza.constants.Constantes.RENOVACION_PDF_NOMBRE;
+
 @ApplicationScoped
 public class DocumentRenovacionService {
 
@@ -147,8 +149,7 @@ public class DocumentRenovacionService {
              */
             return new GenerarPdfResponse(
                     pdfService.convertirDocxAPdf(docx),
-                    data.getCodigo().concat("_Renovación Ref.")
-                            .concat(data.getConstancia()).concat(".pdf"));
+                    String.format(RENOVACION_PDF_NOMBRE, data.getCodigo(), data.getConstancia()));
 
         } finally {
 

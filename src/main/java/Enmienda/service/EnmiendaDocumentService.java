@@ -20,6 +20,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.mendoza.constants.Constantes.ENMIENDA_PDF_NOMBRE;
+
 @ApplicationScoped
 public class EnmiendaDocumentService {
 
@@ -148,8 +150,12 @@ public class EnmiendaDocumentService {
              */
             return new GenerarPdfResponse(
                     pdfService.convertirDocxAPdf(docx),
-                    data.getCodigo().concat("_Enmienda Ref.")
-                            .concat(data.getConstancia()).concat(".pdf"));
+                    String.format(
+                            ENMIENDA_PDF_NOMBRE,
+                            data.getCodigo(),
+                            data.getConstancia()
+                    ));
+
 
         } finally {
 
@@ -216,6 +222,11 @@ public class EnmiendaDocumentService {
         valores.put(
                 "fechaCiei",
                 valorSeguro(data.getFechaCiei())
+        );
+
+        valores.put(
+                "fechaIngreso",
+                valorSeguro(data.getFechaIngreso())
         );
 
 
