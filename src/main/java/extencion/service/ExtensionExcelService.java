@@ -4,6 +4,7 @@ import extencion.model.ExtensionExcelData;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import utils.Utils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,8 +59,8 @@ public class ExtensionExcelService {
                         .codigo(codigoExcel)
                         .titulo(obtenerValor(row, "F", formatter))
                         .investigador(obtenerValor(row, "G", formatter))
-                        .aprDesde(obtenerValor(row, "M", formatter))
-                        .aprHasta(obtenerValor(row, "N", formatter))
+                        .aprDesde(Utils.formarterFecha(obtenerValor(row, "M", formatter)))
+                        .aprHasta(Utils.formarterFecha(obtenerValor(row, "N", formatter)))
                         .constancia(obtenerValor(row, "W", formatter))
                         .build();
             }
@@ -67,6 +68,7 @@ public class ExtensionExcelService {
             return null;
         }
     }
+
 
     private String obtenerValor(
             Row row,
