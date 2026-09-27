@@ -46,6 +46,7 @@ public class Constantes {
     public final static String RENOVACION_PDF_NOMBRE = "%s_Renovación Ref.%s.pdf";
     public final static String EXTENSION_PDF_NOMBRE = "%s_Extensión Ref.%s.pdf";
     public final static String ENMIENDA_PDF_NOMBRE = "%s_Enmienda Ref.%s.pdf";
+    public final static String INFORMEAVANCE_PDF_NOMBRE = "%s_Constancia del %s.pdf";
 
 }
 

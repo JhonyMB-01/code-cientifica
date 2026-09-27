@@ -3,6 +3,7 @@ package utils;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Arrays;
 import java.util.Locale;
 
 public final class Utils {
@@ -20,5 +21,12 @@ public final class Utils {
         }
 
         throw new IllegalArgumentException("Fecha inválida: " + fecha);
+    }
+
+    public static String primerValorNoVacio(String... valores) {
+        return Arrays.stream(valores)
+                .filter(s -> s != null && !s.isBlank())
+                .findFirst()
+                .orElse("");
     }
 }

@@ -41,5 +41,8 @@ public class DocumentConfig {
     @ConfigProperty(name = "documentos.plantilla-constancia")
     String plantillaConstancia;
 
+    @ConfigProperty(name = "documentos.plantilla-informe-avance")
+    String plantillaInformeAvance;
+
 
 }
