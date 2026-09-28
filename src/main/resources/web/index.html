@@ -96,58 +96,6 @@
             </div>
 
 
-            <!-- Imágenes para ENMIENDA -->
-            <div v-if="formData.tipo === 'ENMIENDA'">
-
-                <label
-                        for="imagenes"
-                        class="block text-gray-700 text-sm font-bold mb-2"
-                >
-                    IMÁGENES:
-                </label>
-
-                <input
-                        ref="imagenesInput"
-                        @change="seleccionarImagenes"
-                        :disabled="loading"
-                        type="file"
-                        id="imagenes"
-                        accept="image/*"
-                        multiple
-                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                >
-
-                <p class="mt-1 text-xs text-gray-500">
-                    Puede seleccionar una o varias imágenes.
-                </p>
-
-
-                <!-- Imágenes seleccionadas -->
-                <div
-                        v-if="formData.imagenes.length > 0"
-                        class="mt-2"
-                >
-
-                    <p class="text-sm font-semibold text-gray-700">
-                        Imágenes seleccionadas:
-                    </p>
-
-                    <ul class="mt-1 text-sm text-gray-600">
-
-                        <li
-                                v-for="imagen in formData.imagenes"
-                                :key="imagen.name + imagen.size + imagen.lastModified"
-                        >
-                            {{ imagen.name }}
-                        </li>
-
-                    </ul>
-
-                </div>
-
-            </div>
-
-
             <!-- Botones -->
             <div class="flex flex-col sm:flex-row gap-3 pt-2">
 
@@ -219,8 +167,7 @@
 
     const {
         createApp,
-        ref,
-        watch
+        ref
     } = Vue
 
 
@@ -235,64 +182,24 @@
             const formData =
                 ref({
                     code: '',
-                    tipo: '',
-                    imagenes: []
+                    tipo: ''
                 })
 
 
             const mensaje =
                 ref('')
 
+
             const error =
                 ref('')
+
 
             const loading =
                 ref(false)
 
+
             const formato =
                 ref('')
-
-
-            const imagenesInput =
-                ref(null)
-
-
-            /*
-             * Cuando el usuario cambia de
-             * ENMIENDA a cualquier otro tipo,
-             * se limpian las imágenes.
-             *
-             * Esto limpia tanto:
-             *
-             * 1. El estado de Vue.
-             * 2. El input type="file".
-             */
-            watch(
-                () => formData.value.tipo,
-
-                (nuevoTipo) => {
-
-                    if (nuevoTipo !== 'ENMIENDA') {
-
-                        formData.value.imagenes = []
-
-
-                        /*
-                         * Limpiar el input físico
-                         * para que tampoco quede
-                         * visible el nombre de los
-                         * archivos seleccionados.
-                         */
-                        if (imagenesInput.value) {
-
-                            imagenesInput.value.value = ''
-
-                        }
-
-                    }
-
-                }
-            )
 
 
             /*
@@ -305,9 +212,7 @@
             ) {
 
                 if (!disposition) {
-
                     return fallback
-
                 }
 
 
@@ -332,7 +237,6 @@
                         )
 
                     } catch (e) {
-
                     }
 
                 }
@@ -343,41 +247,19 @@
 
 
                 if (m && m[1]) {
-
                     return m[1]
-
                 }
 
 
                 return fallback
-
-            }
-
-
-            /*
-             * Guardar imágenes seleccionadas.
-             */
-            function seleccionarImagenes(event) {
-
-                const files =
-                    Array.from(
-                        event.target.files || []
-                    )
-
-
-                formData.value.imagenes =
-                    files
-
             }
 
 
             /*
              * Generar documento.
              *
-             * tipoFormato:
-             *
-             *   - word
-             *   - pdf
+             * Todos los tipos de documento utilizan
+             * el mismo comportamiento mediante JSON.
              */
             const generarDocumento =
                 async (tipoFormato) => {
@@ -413,7 +295,6 @@
                             'El código es requerido.'
 
                         return
-
                     }
 
 
@@ -426,24 +307,6 @@
                             'Debe seleccionar un tipo de documento.'
 
                         return
-
-                    }
-
-
-                    /*
-                     * Validación de imágenes
-                     * para ENMIENDA.
-                     */
-                    if (
-                        tipoDocumento === 'ENMIENDA' &&
-                        formData.value.imagenes.length === 0
-                    ) {
-
-                        error.value =
-                            'Debe seleccionar al menos una imagen para la enmienda.'
-
-                        return
-
                     }
 
 
@@ -472,6 +335,7 @@
 
                             CONSTANCIA:
                                 'constancia',
+
                             INFORME:
                                 'informe'
 
@@ -488,169 +352,62 @@
                             tipoFormato
 
 
-                        let resp
-
-
                         /*
-                         * ==================================
-                         * ENMIENDA
-                         * ==================================
-                         *
-                         * El backend espera:
-                         *
-                         * @RestForm("codigo")
-                         * @RestForm("imagenes")
-                         *
-                         * Por eso se utiliza FormData.
+                         * Todos los documentos,
+                         * incluyendo ENMIENDA,
+                         * utilizan JSON.
                          */
-                        if (
-                            tipoDocumento === 'ENMIENDA'
-                        ) {
+                        const request = {
 
-                            const form =
-                                new FormData()
+                            codigo:
+                            codigo,
 
+                            tipoDocumento:
+                            tipoDocumento
 
-                            /*
-                             * Agregar código.
-                             */
-                            form.append(
-                                'codigo',
-                                codigo
-                            )
+                        }
 
 
-                            /*
-                             * Agregar todas las imágenes
-                             * utilizando el mismo nombre:
-                             *
-                             * "imagenes"
-                             */
-                            formData.value.imagenes.forEach(
-                                (imagen) => {
+                        console.log(
+                            'POST:',
+                            url
+                        )
 
-                                    form.append(
-                                        'imagenes',
-                                        imagen,
-                                        imagen.name
-                                    )
+
+                        console.log(
+                            'Request:',
+                            request
+                        )
+
+
+                        const resp =
+                            await fetch(
+                                url,
+                                {
+
+                                    method: 'POST',
+
+                                    headers: {
+
+                                        'Content-Type':
+                                            'application/json',
+
+                                        'Accept':
+                                            tipoFormato === 'pdf'
+
+                                                ? 'application/pdf'
+
+                                                : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+
+                                    },
+
+                                    body:
+                                        JSON.stringify(
+                                            request
+                                        )
 
                                 }
                             )
-
-
-                            console.log(
-                                'POST multipart:',
-                                url
-                            )
-
-
-                            console.log(
-                                'Código:',
-                                codigo
-                            )
-
-
-                            console.log(
-                                'Imágenes:',
-                                formData.value.imagenes
-                            )
-
-
-                            /*
-                             * IMPORTANTE:
-                             *
-                             * No establecer manualmente
-                             * Content-Type.
-                             *
-                             * El navegador agrega
-                             * automáticamente:
-                             *
-                             * multipart/form-data;
-                             * boundary=...
-                             */
-                            resp =
-                                await fetch(
-                                    url,
-                                    {
-
-                                        method: 'POST',
-
-                                        headers: {
-
-                                            'Accept':
-                                                'application/pdf'
-
-                                        },
-
-                                        body: form
-
-                                    }
-                                )
-
-                        } else {
-
-                            /*
-                             * ==================================
-                             * RESTO DE DOCUMENTOS
-                             * ==================================
-                             *
-                             * Se mantiene el comportamiento
-                             * original utilizando JSON.
-                             */
-                            const request = {
-
-                                codigo:
-                                codigo,
-
-                                tipoDocumento:
-                                tipoDocumento
-
-                            }
-
-
-                            console.log(
-                                'POST:',
-                                url
-                            )
-
-
-                            console.log(
-                                'Request:',
-                                request
-                            )
-
-
-                            resp =
-                                await fetch(
-                                    url,
-                                    {
-
-                                        method: 'POST',
-
-                                        headers: {
-
-                                            'Content-Type':
-                                                'application/json',
-
-                                            'Accept':
-                                                tipoFormato === 'pdf'
-
-                                                    ? 'application/pdf'
-
-                                                    : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-
-                                        },
-
-                                        body:
-                                            JSON.stringify(
-                                                request
-                                            )
-
-                                    }
-                                )
-
-                        }
 
 
                         /*
@@ -659,9 +416,7 @@
                          * ==================================
                          */
 
-                        if (
-                            resp.status === 400
-                        ) {
+                        if (resp.status === 400) {
 
                             const txt =
                                 await resp.text()
@@ -673,13 +428,10 @@
 
 
                             return
-
                         }
 
 
-                        if (
-                            resp.status === 404
-                        ) {
+                        if (resp.status === 404) {
 
                             const txt =
                                 await resp.text()
@@ -691,13 +443,10 @@
 
 
                             return
-
                         }
 
 
-                        if (
-                            resp.status >= 400
-                        ) {
+                        if (resp.status >= 400) {
 
                             const txt =
                                 await resp.text()
@@ -710,7 +459,6 @@
 
 
                             return
-
                         }
 
 
@@ -813,9 +561,10 @@
                             tipoFormato.toUpperCase() +
                             ' generado correctamente.'
 
+
                         /*
-                         * Limpiar el formulario después
-                         * de generar correctamente el documento.
+                         * Limpiar código después
+                         * de generar correctamente.
                          */
                         formData.value.code = ''
 
@@ -858,10 +607,6 @@
                 loading,
 
                 formato,
-
-                imagenesInput,
-
-                seleccionarImagenes,
 
                 generarDocumento
 

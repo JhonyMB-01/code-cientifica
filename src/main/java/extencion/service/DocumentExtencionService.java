@@ -66,8 +66,6 @@ public class DocumentExtencionService {
             );
         }
 
-
-
         Path plantilla =
                 Path.of(documentConfig.getBasePath())
                         .resolve(documentConfig.getPlantillasPath())

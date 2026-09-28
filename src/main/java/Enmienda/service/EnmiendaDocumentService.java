@@ -1,6 +1,5 @@
 package Enmienda.service;
 
-import Enmienda.model.DocumentoImagen;
 import Enmienda.model.EnmiendaExcelData;
 import contancia.DocumentNotFoundException;
 import contancia.config.DocumentConfig;
@@ -8,10 +7,10 @@ import contancia.service.PdfService;
 import contancia.service.WordService;
 import extencion.dto.GenerarDocumentoRequest;
 import extencion.dto.GenerarPdfResponse;
+import extencion.model.ExtensionExcelData;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import renovacion.model.RenovacionExcelData;
-import renovacion.service.RenovacionExcelService;
+import utils.GenerarWordResponse;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,7 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.mendoza.constants.Constantes.ENMIENDA_PDF_NOMBRE;
+import static org.mendoza.constants.Constantes.*;
 
 @ApplicationScoped
 public class EnmiendaDocumentService {
@@ -37,17 +36,19 @@ public class EnmiendaDocumentService {
     @Inject
     PdfService pdfService;
 
-    public byte[] generarWordEnmienda(String codigo, List<DocumentoImagen> documentosImagen) throws IOException {
+    public GenerarWordResponse generarWordEnmienda(GenerarDocumentoRequest request)
+            throws IOException {
 
+        validarRequest(request);
 
-        /*if (!"ENMIENDA".equalsIgnoreCase(
-                codigo)) {
+        if (!"ENMIENDA".equalsIgnoreCase(
+                request.getTipoDocumento())) {
 
             throw new IllegalArgumentException(
                     "Por el momento solamente se encuentra "
                             + "implementado el documento ENMIENDA"
             );
-        }*/
+        }
 
         Path excelPath = Path.of(documentConfig.getBasePath())
                 .resolve(documentConfig.getExcelFile());
@@ -55,19 +56,17 @@ public class EnmiendaDocumentService {
         EnmiendaExcelData data =
                 enmiendaExcelService.buscarPorCodigo(
                         excelPath,
-                        codigo
+                        request.getCodigo()
                 );
 
         if (data == null) {
 
             throw new DocumentNotFoundException(
                     "No se encontró el código '"
-                            + codigo
-                            + "' en la hoja Extensión"
+                            + request.getCodigo()
+                            + "' en la hoja Enmienda"
             );
         }
-
-
 
         Path plantilla =
                 Path.of(documentConfig.getBasePath())
@@ -82,14 +81,12 @@ public class EnmiendaDocumentService {
 
         try {
 
-            docx =
-                    wordService.generarWord(
-                            construirValores(data), plantilla.toString(), documentosImagen
-                    );
-
-            return Files.readAllBytes(
-                    docx
+            docx = wordService.generarWord(
+                    construirValores(data), plantilla.toString(), null
             );
+
+            return new GenerarWordResponse(Files.readAllBytes(docx),
+                    String.format(ENMIENDA_WORD_NOMBRE, data.getCodigo(), data.getConstancia()));
 
         } finally {
 
@@ -103,7 +100,7 @@ public class EnmiendaDocumentService {
      * Genera el documento PDF final.
      */
     public GenerarPdfResponse generarPdf(
-            String codigo, List<DocumentoImagen> documentosImagen) throws Exception {
+            GenerarDocumentoRequest request) throws Exception {
 
         /*
          * 1. Obtener datos desde Excel.
@@ -114,14 +111,14 @@ public class EnmiendaDocumentService {
         EnmiendaExcelData data =
                 enmiendaExcelService.buscarPorCodigo(
                         excelPath,
-                        codigo
+                        request.getCodigo()
                 );
 
         if (data == null) {
 
             throw new DocumentNotFoundException(
                     "No se encontró el código '"
-                            + codigo
+                            + request.getCodigo()
                             + "' en la hoja Enmienda"
             );
         }
@@ -141,7 +138,7 @@ public class EnmiendaDocumentService {
              */
             docx =
                     wordService.generarWord(
-                            construirValores(data), plantilla.toString(), documentosImagen
+                            construirValores(data), plantilla.toString(), null
                     );
 
 

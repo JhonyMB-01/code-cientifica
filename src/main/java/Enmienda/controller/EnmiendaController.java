@@ -14,6 +14,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
+import utils.GenerarWordResponse;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -28,62 +29,68 @@ public class EnmiendaController {
 
     private static final int MAX_IMAGENES = 6;
 
+    @POST
+    @Path("/word")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    )
+    public Response generarWord(
+            GenerarDocumentoRequest request) {
+
+        if (request == null || request.getCodigo() == null || request.getCodigo().trim().isEmpty()) {
+
+            return Response.status(
+                            Response.Status.BAD_REQUEST
+                    )
+                    .entity("Código vacío")
+                    .type(MediaType.TEXT_PLAIN)
+                    .build();
+        }
+
+        try {
+
+            GenerarWordResponse response = enmiendaDocumentService.generarWordEnmienda(request);
+            byte[] documento = response.getPdfContent();
+            String nombreArchivo = response.getNameWordGenerate();
+
+            return Response.ok(documento)
+                    .header("Content-Disposition", "attachment; filename=\"" + nombreArchivo + "\"")
+                    .build();
+
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error al generar el documento: " + e.getMessage())
+                    .type(MediaType.TEXT_PLAIN)
+                    .build();
+        }
+
+    }
+
 
     @POST
     @Path("/pdf")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces("application/pdf")
-    public Response generarPdf(@RestForm("codigo") String codigo,
-                               @RestForm("imagenes")List<FileUpload> imagenes) {
+    public Response generarPdf(GenerarDocumentoRequest request) {
+
+        if (request == null || request.getCodigo() == null || request.getCodigo().trim().isEmpty()) {
+
+            return Response.status(
+                            Response.Status.BAD_REQUEST
+                    )
+                    .entity("Código vacío")
+                    .type(MediaType.TEXT_PLAIN)
+                    .build();
+        }
+
         try {
-
-            /*
-             * Validar código
-             */
-            if (codigo == null ||
-                    codigo.isBlank()) {
-
-                return Response.status(
-                        Response.Status.BAD_REQUEST
-                ).entity(
-                        "{\"error\":\"El código es obligatorio.\"}"
-                ).build();
-            }
-
-            /*
-             * Si no llegan imágenes,
-             * trabajamos con una lista vacía.
-             */
-            if (imagenes == null) {
-                imagenes = new ArrayList<>();
-            }
-
-            /*
-             * Máximo 6 imágenes.
-             */
-            if (imagenes.size() > MAX_IMAGENES) {
-
-                return Response.status(
-                        Response.Status.BAD_REQUEST
-                ).entity(
-                        "{\"error\":\"Se permite un máximo de 6 imágenes.\"}"
-                ).build();
-            }
-
-            /*
-             * Convertir FileUpload a DocumentoImagen.
-             */
-            List<DocumentoImagen> documentosImagen =
-                    convertirImagenes(imagenes);
 
             /*
              * Generar PDF.
              */
             GenerarPdfResponse pdfResponse =
-                    enmiendaDocumentService.generarPdf(
-                            codigo,
-                            documentosImagen
-                    );
+                    enmiendaDocumentService.generarPdf(request);
 
             byte[] documento = pdfResponse.getPdfContent();
             String nombreArchivo = pdfResponse.getNamePdfGenerate();
@@ -93,13 +100,7 @@ public class EnmiendaController {
              * Respuesta PDF.
              */
             return Response.ok(documento)
-                    .type("application/pdf")
-                    .header(
-                            "Content-Disposition",
-                            "attachment; filename=\"Enmienda_"
-                                    + limpiarNombre(codigo)
-                                    + ".pdf\""
-                    )
+                    .header("Content-Disposition", "attachment; filename=\"" + nombreArchivo + "\"")
                     .build();
 
         } catch (IllegalArgumentException e) {
