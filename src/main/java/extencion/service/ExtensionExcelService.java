@@ -55,11 +55,17 @@ public class ExtensionExcelService {
                     continue;
                 }
 
+                String fechaCIEI = Utils.primerValorNoVacio(
+                        obtenerValor(row, "U", formatter),
+                        obtenerValor(row, "S", formatter),
+                        obtenerValor(row, "Q", formatter)
+                );
+
                 return ExtensionExcelData.builder()
                         .codigo(codigoExcel)
                         .titulo(obtenerValor(row, "F", formatter))
                         .investigador(obtenerValor(row, "G", formatter))
-                        .aprDesde(Utils.formarterFecha(obtenerValor(row, "M", formatter)))
+                        .fechaCiei(Utils.formarterFecha(fechaCIEI))
                         .aprHasta(Utils.formarterFecha(obtenerValor(row, "N", formatter)))
                         .constancia(obtenerValor(row, "W", formatter))
                         .build();

@@ -21,5 +21,5 @@ public class ExtensionExcelData {
 
     private String aprHasta;
 
-    private String aprDesde;
+    private String fechaCiei;
 }

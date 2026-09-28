@@ -9,6 +9,7 @@ import extencion.dto.GenerarPdfResponse;
 import extencion.model.ExtensionExcelData;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import utils.GenerarWordResponse;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.mendoza.constants.Constantes.EXTENSION_PDF_NOMBRE;
+import static org.mendoza.constants.Constantes.EXTENSION_WORD_NOMBRE;
 
 @ApplicationScoped
 public class DocumentExtencionService {
@@ -33,7 +35,7 @@ public class DocumentExtencionService {
     @Inject
     PdfService pdfService;
 
-    public byte[] generarWord(GenerarDocumentoRequest request) throws IOException {
+    public GenerarWordResponse generarWord(GenerarDocumentoRequest request) throws IOException {
 
         validarRequest(request);
 
@@ -84,9 +86,8 @@ public class DocumentExtencionService {
                             construirValores(data), plantilla.toString(), null
                     );
 
-            return Files.readAllBytes(
-                    docx
-            );
+            return new GenerarWordResponse(Files.readAllBytes(docx),
+                    String.format(EXTENSION_WORD_NOMBRE, data.getCodigo(), data.getConstancia()));
 
         } finally {
 
@@ -217,8 +218,8 @@ public class DocumentExtencionService {
         );
 
         valores.put(
-                "AprDesde",
-                valorSeguro(data.getAprDesde())
+                "fechaCiei",
+                valorSeguro(data.getFechaCiei())
         );
 
         return valores;

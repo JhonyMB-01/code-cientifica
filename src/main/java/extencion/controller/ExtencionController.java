@@ -7,6 +7,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import utils.GenerarWordResponse;
 
 @Path("/document/extencion/v1")
 public class ExtencionController {
@@ -35,17 +36,9 @@ public class ExtencionController {
 
         try {
 
-            String codigoLimpio = request.getCodigo().trim();
-
-            byte[] documento =
-                    extencionService.generarWord(
-                            request
-                    );
-
-            String nombreArchivo =
-                    "output_" +
-                            codigoLimpio +
-                            ".docx";
+            GenerarWordResponse response = extencionService.generarWord(request);
+            byte[] documento = response.getPdfContent();
+            String nombreArchivo = response.getNameWordGenerate();
 
             return Response.ok(documento)
                     .header("Content-Disposition", "attachment; filename=\"" + nombreArchivo + "\"")

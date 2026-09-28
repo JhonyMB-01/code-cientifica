@@ -42,11 +42,18 @@ public class Constantes {
 
     public final static String CODE_0 = "0.0";
 
-    //Nombre de los dcumentos
+    //Nombre de los dcumentos PDF
     public final static String RENOVACION_PDF_NOMBRE = "%s_Renovación Ref.%s.pdf";
     public final static String EXTENSION_PDF_NOMBRE = "%s_Extensión Ref.%s.pdf";
     public final static String ENMIENDA_PDF_NOMBRE = "%s_Enmienda Ref.%s.pdf";
     public final static String INFORMEAVANCE_PDF_NOMBRE = "%s_Constancia del %s.pdf";
+
+    //Nombre de los dcumentos PDF
+    public final static String RENOVACION_WORD_NOMBRE = "%s_Renovación Ref.%s.docx";
+    public final static String EXTENSION_WORD_NOMBRE = "%s_Extensión Ref.%s.docx";
+    public final static String ENMIENDA_WORD_NOMBRE = "%s_Enmienda Ref.%s.docx";
+    public final static String INFORMEAVANCE_WORD_NOMBRE = "%s_Constancia del %s.docx";
+
 
 }
 

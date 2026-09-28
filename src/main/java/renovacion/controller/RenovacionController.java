@@ -11,6 +11,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import renovacion.service.DocumentRenovacionService;
+import utils.GenerarWordResponse;
 
 @Path("/document/renovacion/v1")
 public class RenovacionController {
@@ -39,17 +40,11 @@ public class RenovacionController {
 
         try {
 
-            String codigoLimpio = request.getCodigo().trim();
+            GenerarWordResponse response = renovacionService
+                    .generarWordRenovacion(request);
 
-            byte[] documento =
-                    renovacionService.generarWordRenovacion(
-                            request
-                    );
-
-            String nombreArchivo =
-                    "output_" +
-                            codigoLimpio +
-                            ".docx";
+            byte[] documento = response.getPdfContent();
+            String nombreArchivo = response.getNameWordGenerate();
 
             return Response.ok(documento)
                     .header("Content-Disposition", "attachment; filename=\"" + nombreArchivo + "\"")

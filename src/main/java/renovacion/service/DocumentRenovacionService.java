@@ -11,6 +11,7 @@ import extencion.service.ExtensionExcelService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import renovacion.model.RenovacionExcelData;
+import utils.GenerarWordResponse;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -18,7 +19,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.mendoza.constants.Constantes.RENOVACION_PDF_NOMBRE;
+import static org.mendoza.constants.Constantes.*;
 
 @ApplicationScoped
 public class DocumentRenovacionService {
@@ -35,7 +36,7 @@ public class DocumentRenovacionService {
     @Inject
     PdfService pdfService;
 
-    public byte[] generarWordRenovacion(GenerarDocumentoRequest request) throws IOException {
+    public GenerarWordResponse generarWordRenovacion(GenerarDocumentoRequest request) throws IOException {
 
         validarRequest(request);
 
@@ -86,9 +87,9 @@ public class DocumentRenovacionService {
                             construirValores(data), plantilla.toString(), null
                     );
 
-            return Files.readAllBytes(
-                    docx
-            );
+            return new GenerarWordResponse(Files.readAllBytes(docx),
+                    String.format(RENOVACION_WORD_NOMBRE, data.getCodigo(), data.getConstancia()));
+
 
         } finally {
 

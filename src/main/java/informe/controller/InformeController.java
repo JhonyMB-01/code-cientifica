@@ -10,6 +10,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import utils.GenerarWordResponse;
 
 @Path("/document/informe/v1")
 public class InformeController {
@@ -38,17 +39,12 @@ public class InformeController {
 
         try {
 
-            String codigoLimpio = request.getCodigo().trim();
+            GenerarWordResponse response = documentInformeService
+                    .generarWordInformeAvance(request);
 
-            byte[] documento =
-                    documentInformeService.generarWordInformeAvance(
-                            request
-                    );
+            byte[] documento = response.getPdfContent();
+            String nombreArchivo = response.getNameWordGenerate();
 
-            String nombreArchivo =
-                    "output_" +
-                            codigoLimpio +
-                            ".docx";
 
             return Response.ok(documento)
                     .header("Content-Disposition", "attachment; filename=\"" + nombreArchivo + "\"")
