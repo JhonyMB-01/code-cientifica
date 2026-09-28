@@ -18,18 +18,26 @@ public class WordTemplateProcessor {
             Pattern.compile("\\$\\{([^}]+)}");
 
 
+    /**
+     * Procesa una lista de párrafos buscando placeholders
+     * con formato ${NombrePlaceholder}.
+     *
+     * @param paragraphs lista de párrafos del documento
+     * @param datos      mapa con los valores de los placeholders
+     */
     public void procesarParrafos(
             List<XWPFParagraph> paragraphs,
             Map<String, String> datos) {
 
-        if (paragraphs == null ||
-                paragraphs.isEmpty()) {
-
+        if (paragraphs == null || paragraphs.isEmpty()) {
             return;
         }
 
-        for (XWPFParagraph paragraph :
-                paragraphs) {
+        for (XWPFParagraph paragraph : new ArrayList<>(paragraphs)) {
+
+            if (paragraph == null) {
+                continue;
+            }
 
             procesarParrafo(
                     paragraph,
@@ -39,6 +47,9 @@ public class WordTemplateProcessor {
     }
 
 
+    /**
+     * Procesa un párrafo individual.
+     */
     private void procesarParrafo(
             XWPFParagraph paragraph,
             Map<String, String> datos) {
@@ -47,18 +58,19 @@ public class WordTemplateProcessor {
             return;
         }
 
-        List<XWPFRun> runs =
-                paragraph.getRuns();
+        if (datos == null || datos.isEmpty()) {
+            return;
+        }
 
-        if (runs == null ||
-                runs.isEmpty()) {
+        List<XWPFRun> runs = paragraph.getRuns();
 
+        if (runs == null || runs.isEmpty()) {
             return;
         }
 
 
         /*
-         * Construir texto completo.
+         * Construir el texto completo del párrafo.
          */
         StringBuilder textoCompleto =
                 new StringBuilder();
@@ -95,6 +107,10 @@ public class WordTemplateProcessor {
             String clave =
                     matcher.group(1);
 
+            /*
+             * Si el placeholder no existe en el mapa,
+             * no se modifica.
+             */
             if (!datos.containsKey(clave)) {
                 continue;
             }
@@ -122,12 +138,22 @@ public class WordTemplateProcessor {
 
 
         /*
-         * Procesar desde el final.
+         * Procesar desde el final hacia el inicio.
+         *
+         * Esto evita que los índices de los placeholders
+         * posteriores se vean afectados por los reemplazos.
          */
-        for (int i =
-             placeholders.size() - 1;
+        for (int i = placeholders.size() - 1;
              i >= 0;
              i--) {
+
+            /*
+             * El párrafo puede haber sido eliminado por un
+             * placeholder anterior.
+             */
+            if (!parrafoExiste(paragraph)) {
+                return;
+            }
 
             reemplazarPlaceholder(
                     paragraph,
@@ -137,12 +163,95 @@ public class WordTemplateProcessor {
     }
 
 
+    /**
+     * Reemplaza un placeholder dentro de un párrafo.
+     *
+     * Si el valor es vacío y el placeholder representa
+     * el contenido completo del párrafo, se elimina
+     * completamente el párrafo.
+     */
     private void reemplazarPlaceholder(
             XWPFParagraph paragraph,
             Placeholder placeholder) {
 
+        if (paragraph == null || placeholder == null) {
+            return;
+        }
+
         List<XWPFRun> runs =
                 paragraph.getRuns();
+
+        if (runs == null || runs.isEmpty()) {
+            return;
+        }
+
+
+        /*
+         * Construir nuevamente el texto actual del párrafo.
+         *
+         * Esto es importante porque pueden existir varios
+         * placeholders dentro del mismo párrafo.
+         */
+        StringBuilder textoBuilder =
+                new StringBuilder();
+
+        for (XWPFRun run : runs) {
+
+            String textoRun =
+                    obtenerTextoRun(run);
+
+            if (textoRun != null) {
+                textoBuilder.append(textoRun);
+            }
+        }
+
+        String textoActual =
+                textoBuilder.toString();
+
+
+        /*
+         * Si el valor está vacío, verificar si el placeholder
+         * representa realmente todo el contenido del párrafo.
+         *
+         * Ejemplo:
+         *
+         * ${ParrafoDentroUniversidad}
+         *
+         * Se elimina el párrafo completo.
+         *
+         * Pero:
+         *
+         * Texto ${Placeholder} adicional
+         *
+         * NO elimina el párrafo.
+         */
+        if (placeholder.valor == null ||
+                placeholder.valor.trim().isEmpty()) {
+
+            String textoSinPlaceholder =
+                    textoActual.substring(
+                            0,
+                            Math.min(
+                                    placeholder.inicio,
+                                    textoActual.length()
+                            )
+                    )
+                            +
+                            textoActual.substring(
+                                    Math.min(
+                                            placeholder.fin,
+                                            textoActual.length()
+                                    )
+                            );
+
+            if (textoSinPlaceholder.trim().isEmpty()) {
+
+                eliminarParrafo(paragraph);
+
+                return;
+            }
+        }
+
 
         int posicion = 0;
 
@@ -170,11 +279,16 @@ public class WordTemplateProcessor {
             }
 
             int inicio = posicion;
+
             int fin =
                     posicion +
                             textoRun.length();
 
 
+            /*
+             * Encontrar Run donde comienza
+             * el placeholder.
+             */
             if (runInicio == -1 &&
                     placeholder.inicio >= inicio &&
                     placeholder.inicio < fin) {
@@ -187,6 +301,10 @@ public class WordTemplateProcessor {
             }
 
 
+            /*
+             * Encontrar Run donde termina
+             * el placeholder.
+             */
             if (placeholder.fin > inicio &&
                     placeholder.fin <= fin) {
 
@@ -198,7 +316,6 @@ public class WordTemplateProcessor {
 
                 break;
             }
-
 
             posicion = fin;
         }
@@ -237,6 +354,7 @@ public class WordTemplateProcessor {
                     textoInicial.substring(
                             offsetFin
                     );
+
 
             runInicial.setText(
                     antes +
@@ -306,7 +424,7 @@ public class WordTemplateProcessor {
 
 
         /*
-         * Vaciar Run intermedios.
+         * Vaciar Runs intermedios.
          */
         for (int i =
              runInicio + 1;
@@ -321,6 +439,94 @@ public class WordTemplateProcessor {
     }
 
 
+    /**
+     * Elimina completamente un párrafo del documento Word.
+     *
+     * Esto es diferente a colocar simplemente "":
+     * al eliminar el párrafo evitamos que Word conserve
+     * el espacio vertical correspondiente al párrafo vacío.
+     */
+    private void eliminarParrafo(
+            XWPFParagraph paragraph) {
+
+        if (paragraph == null) {
+            return;
+        }
+
+        try {
+
+            var ctp =
+                    paragraph.getCTP();
+
+            if (ctp == null) {
+                return;
+            }
+
+            var parent =
+                    ctp.getDomNode().getParentNode();
+
+            if (parent != null) {
+
+                parent.removeChild(
+                        ctp.getDomNode()
+                );
+            }
+
+        } catch (Exception e) {
+
+            /*
+             * Como alternativa, si por alguna razón
+             * no se puede eliminar el nodo XML,
+             * vaciamos los Runs del párrafo.
+             */
+            List<XWPFRun> runs =
+                    paragraph.getRuns();
+
+            if (runs != null) {
+
+                for (XWPFRun run : runs) {
+
+                    if (run != null) {
+
+                        run.setText(
+                                "",
+                                0
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+
+    /**
+     * Verifica si el párrafo todavía pertenece
+     * al documento XML.
+     */
+    private boolean parrafoExiste(
+            XWPFParagraph paragraph) {
+
+        if (paragraph == null) {
+            return false;
+        }
+
+        try {
+
+            return paragraph.getCTP() != null &&
+                    paragraph.getCTP().getDomNode() != null &&
+                    paragraph.getCTP().getDomNode().getParentNode() != null;
+
+        } catch (Exception e) {
+
+            return false;
+        }
+    }
+
+
+    /**
+     * Obtiene todo el texto contenido dentro
+     * de un XWPFRun.
+     */
     private String obtenerTextoRun(
             XWPFRun run) {
 
@@ -332,7 +538,8 @@ public class WordTemplateProcessor {
                 new StringBuilder();
 
         int cantidad =
-                run.getCTR().sizeOfTArray();
+                run.getCTR()
+                        .sizeOfTArray();
 
         for (int i = 0;
              i < cantidad;
@@ -342,6 +549,7 @@ public class WordTemplateProcessor {
                     run.getText(i);
 
             if (valor != null) {
+
                 texto.append(valor);
             }
         }
@@ -350,10 +558,16 @@ public class WordTemplateProcessor {
     }
 
 
+    /**
+     * Representa un placeholder encontrado
+     * dentro del texto del párrafo.
+     */
     private static class Placeholder {
 
         private final int inicio;
+
         private final int fin;
+
         private final String valor;
 
 
@@ -363,7 +577,9 @@ public class WordTemplateProcessor {
                 String valor) {
 
             this.inicio = inicio;
+
             this.fin = fin;
+
             this.valor = valor;
         }
     }

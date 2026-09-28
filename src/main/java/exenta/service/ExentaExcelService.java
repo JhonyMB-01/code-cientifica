@@ -1,7 +1,5 @@
 package exenta.service;
 
-import exenta.model.ExentanExcelData;
-import extencion.model.ExtensionExcelData;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -11,7 +9,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Formatter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -330,7 +327,7 @@ public class ExentaExcelService {
 
             datos.put(
                     "ParrafoExternoUniversidad",
-                    EMPTY
+                    EMPTY.strip()
             );
 
             orden++;
@@ -348,7 +345,7 @@ public class ExentaExcelService {
 
             datos.put(
                     "ParrafoDentroUniversidad",
-                    EMPTY
+                    EMPTY.strip()
             );
 
             orden++;
@@ -357,12 +354,12 @@ public class ExentaExcelService {
 
             datos.put(
                     "ParrafoDentroUniversidad",
-                    EMPTY
+                    EMPTY.strip()
             );
 
             datos.put(
                     "ParrafoExternoUniversidad",
-                    EMPTY
+                    EMPTY.strip()
             );
         }
 
@@ -389,7 +386,7 @@ public class ExentaExcelService {
 
             datos.put(
                     "ParrafoValidacionInstrumento",
-                    ""
+                    "".strip()
             );
         }
 
