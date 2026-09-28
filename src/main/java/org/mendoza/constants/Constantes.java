@@ -47,12 +47,16 @@ public class Constantes {
     public final static String EXTENSION_PDF_NOMBRE = "%s_Extensión Ref.%s.pdf";
     public final static String ENMIENDA_PDF_NOMBRE = "%s_Enmienda Ref.%s.pdf";
     public final static String INFORMEAVANCE_PDF_NOMBRE = "%s_Constancia del %s.pdf";
+    public final static String CONSTANCIA_PDF_NOMBRE = "%s_Constancia del %s.pdf";
+    public final static String EXENTA_PDF_NOMBRE = "%s_Constancia del %s - Exenta.pdf";
 
     //Nombre de los dcumentos PDF
     public final static String RENOVACION_WORD_NOMBRE = "%s_Renovación Ref.%s.docx";
     public final static String EXTENSION_WORD_NOMBRE = "%s_Extensión Ref.%s.docx";
     public final static String ENMIENDA_WORD_NOMBRE = "%s_Enmienda Ref.%s.docx";
     public final static String INFORMEAVANCE_WORD_NOMBRE = "%s_Constancia del %s.docx";
+    public final static String CONSTANCIA_WORD_NOMBRE = "%s_Constancia del %s.docx";
+    public final static String EXENTA_WORD_NOMBRE = "%s_Constancia del %s - Exenta.docx";
 
 
 }
