@@ -2,14 +2,15 @@ package contancia.resource;
 
 import contancia.DocumentNotFoundException;
 import contancia.service.DocumentService;
-import contancia.service.ExcelService;
-import contancia.service.WordService;
+import exenta.service.DocumentExentaService;
 import extencion.dto.GenerarDocumentoRequest;
-import extencion.service.DocumentExtencionService;
+
+import extencion.dto.GenerarPdfResponse;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import utils.GenerarWordResponse;
 
 import java.util.Map;
 
@@ -17,7 +18,7 @@ import java.util.Map;
 public class DocumentoResource {
 
     @Inject
-    DocumentService documentService;
+    DocumentExentaService exentaService;
 
     /**
      * Genera y descarga el documento Word.
@@ -46,17 +47,13 @@ public class DocumentoResource {
 
         try {
 
-            String codigoLimpio = codigo.trim();
-
-            byte[] documento =
-                    documentService.generarWord(
-                            codigoLimpio
+            GenerarWordResponse response =
+                    exentaService.generarWord(
+                            request
                     );
 
-            String nombreArchivo =
-                    "output_" +
-                            codigoLimpio +
-                            ".docx";
+            byte[] documento = response.getPdfContent();
+            String nombreArchivo = response.getNameWordGenerate();
 
             return Response.ok(documento)
                     .type(
@@ -119,18 +116,10 @@ public class DocumentoResource {
 
         try {
 
-            String codigoLimpio =
-                    codigo.trim();
+            GenerarPdfResponse response = exentaService.generarPdf(request);
 
-            byte[] documento =
-                    documentService.generarPdf(
-                            codigoLimpio
-                    );
-
-            String nombreArchivo =
-                    "output_" +
-                            codigoLimpio +
-                            ".pdf";
+            byte[] documento = response.getPdfContent();
+            String nombreArchivo = response.getNamePdfGenerate();
 
             return Response.ok(documento)
                     .type("application/pdf")

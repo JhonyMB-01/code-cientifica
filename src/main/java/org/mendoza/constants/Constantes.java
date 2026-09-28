@@ -58,6 +58,8 @@ public class Constantes {
     public final static String CONSTANCIA_WORD_NOMBRE = "%s_Constancia del %s.docx";
     public final static String EXENTA_WORD_NOMBRE = "%s_Constancia del %s - Exenta.docx";
 
+    //Nombre Exenta
+    public final static String EXENTA_NOMBRE = "exenta";
 
 }
 

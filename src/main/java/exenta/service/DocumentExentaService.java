@@ -39,14 +39,14 @@ public class DocumentExentaService {
 
         validarRequest(request);
 
-        if (!"EXENTA".equalsIgnoreCase(
+        /*if (!"EXENTA".equalsIgnoreCase(
                 request.getTipoDocumento())) {
 
             throw new IllegalArgumentException(
                     "Por el momento solamente se encuentra "
                             + "implementado el documento EXENTA"
             );
-        }
+        }*/
 
         Path excelPath = Path.of(documentConfig.getBasePath())
                 .resolve(documentConfig.getExcelFile());
@@ -66,10 +66,8 @@ public class DocumentExentaService {
             );
         }
 
-        Path plantilla =
-                Path.of(documentConfig.getBasePath())
-                        .resolve(documentConfig.getPlantillasPath())
-                        .resolve(documentConfig.getPlantillaConstanciaExenta());
+        Path plantilla = getPath(request);
+
 
         /*
          * 2. Generar DOCX.
@@ -84,8 +82,12 @@ public class DocumentExentaService {
                             data, plantilla.toString(), null
                     );
 
+            String wordName = request.getTipoDocumento().equals(EXENTA_NOMBRE)
+                    ? String.format(EXENTA_WORD_NOMBRE, data.get("Codigo"), data.get("Constancia"))
+                    : String.format(CONSTANCIA_WORD_NOMBRE, data.get("Codigo"), data.get("Constancia"));
+
             return new GenerarWordResponse(Files.readAllBytes(docx),
-                    String.format(EXENTA_WORD_NOMBRE, data.get("Codigo"), data.get("Constancia")));
+                    wordName);
 
         } finally {
 
@@ -93,6 +95,23 @@ public class DocumentExentaService {
                     docx
             );
         }
+    }
+
+    private Path getPath(GenerarDocumentoRequest request) {
+        Path plantilla;
+
+        if (request.getTipoDocumento().equalsIgnoreCase(EXENTA_NOMBRE)) {
+            plantilla =
+                    Path.of(documentConfig.getBasePath())
+                            .resolve(documentConfig.getPlantillasPath())
+                            .resolve(documentConfig.getPlantillaConstanciaExenta());
+        }else {
+            plantilla =
+                    Path.of(documentConfig.getBasePath())
+                            .resolve(documentConfig.getPlantillasPath())
+                            .resolve(documentConfig.getPlantillaConstancia());
+        }
+        return plantilla;
     }
 
     /**
@@ -122,10 +141,7 @@ public class DocumentExentaService {
             );
         }
 
-        Path plantilla =
-                Path.of(documentConfig.getBasePath())
-                        .resolve(documentConfig.getPlantillasPath())
-                        .resolve(documentConfig.getPlantillaConstanciaExenta());
+        Path plantilla = getPath(request);
 
 
         Path docx = null;
@@ -140,13 +156,17 @@ public class DocumentExentaService {
                             data, plantilla.toString(), null
                     );
 
+            String pdfName = request.getTipoDocumento().equalsIgnoreCase(EXENTA_NOMBRE)
+                    ? String.format(EXENTA_PDF_NOMBRE, data.get("Codigo"), data.get("Constancia"))
+                    : String.format(CONSTANCIA_PDF_NOMBRE, data.get("Codigo"), data.get("Constancia"));
+
 
             /*
              * 3. Convertir DOCX → PDF.
              */
             return new GenerarPdfResponse(
                     pdfService.convertirDocxAPdf(docx),
-                    String.format(EXENTA_PDF_NOMBRE, data.get("Codigo"), data.get("Constancia")));
+                    pdfName);
 
         } finally {
 
