@@ -40,7 +40,7 @@ public class Constantes {
 
     public final static String SEPARADOR = ".- ";
 
-    public final static String CODE_0 = "0.0";
+    public final static String CODE_0 = "0";
 
     //Nombre de los dcumentos PDF
     public final static String RENOVACION_PDF_NOMBRE = "%s_Renovación Ref.%s.pdf";

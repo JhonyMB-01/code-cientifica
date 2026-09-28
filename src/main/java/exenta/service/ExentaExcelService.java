@@ -15,6 +15,7 @@ import java.util.Formatter;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.apache.logging.log4j.util.Strings.EMPTY;
 import static org.mendoza.constants.Constantes.*;
 import static org.mendoza.constants.Constantes.APROBACION_CIEI;
 import static org.mendoza.constants.Constantes.APROBACION_ESTUDIO;
@@ -159,7 +160,7 @@ public class ExentaExcelService {
         /*
          * Consentimiento informado.
          */
-        if (CODE_0.equals(obtenerValor(row, "M", formatter))) {
+        if (CODE_0.equals(obtenerValor(row, "Q", formatter))) {
 
             datos.put(
                     "ConsentimientoInformado",
@@ -180,13 +181,10 @@ public class ExentaExcelService {
         /*
          * Asentimiento informado.
          */
-        if (CODE_0.equals(obtenerValor(row, "N", formatter))) {
+        if (CODE_0.equals(obtenerValor(row, "R", formatter))) {
 
             datos.put(
-                    "AsentimientoInformado",
-                    ASEN_INFORMADO.concat(
-                            ultimaVersion
-                    )
+                    "AsentimientoInformado", ASEN_INFORMADO.concat(ultimaVersion)
             );
 
         } else {
@@ -250,7 +248,7 @@ public class ExentaExcelService {
                 ultimaVersion =
                         key +
                                 ".0 de fecha " +
-                                valor;
+                                Utils.formarterFecha(valor);
 
                 datos.put(
                         key,
@@ -321,7 +319,7 @@ public class ExentaExcelService {
         String parrafoPermiso = obtenerValor(row, "M", formatter);
 
 
-        if ("1.1".equals(parrafoPermiso)) {
+        if ("1".equals(parrafoPermiso)) {
 
             datos.put(
                     "ParrafoDentroUniversidad",
@@ -332,7 +330,7 @@ public class ExentaExcelService {
 
             datos.put(
                     "ParrafoExternoUniversidad",
-                    ""
+                    EMPTY
             );
 
             orden++;
@@ -350,7 +348,7 @@ public class ExentaExcelService {
 
             datos.put(
                     "ParrafoDentroUniversidad",
-                    ""
+                    EMPTY
             );
 
             orden++;
@@ -359,12 +357,12 @@ public class ExentaExcelService {
 
             datos.put(
                     "ParrafoDentroUniversidad",
-                    ""
+                    EMPTY
             );
 
             datos.put(
                     "ParrafoExternoUniversidad",
-                    ""
+                    EMPTY
             );
         }
 
