@@ -44,5 +44,11 @@ public class DocumentConfig {
     @ConfigProperty(name = "documentos.plantilla-informe-avance")
     String plantillaInformeAvance;
 
+    @ConfigProperty(name = "documentos.plantilla.animal-aprobacion")
+    String plantillaAnimalAprobacion;
+
+    @ConfigProperty(name = "documentos.excel.animal")
+    String excelAnimalFile;
+
 
 }
