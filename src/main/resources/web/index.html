@@ -1,8 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
     <title>Generar Documento</title>
 
     {#bundle /}
@@ -14,30 +19,55 @@
             rel="stylesheet"
     >
 
-    <link href="/static/bundle/styles.css" rel="stylesheet">
+    <link
+            href="/static/bundle/styles.css"
+            rel="stylesheet"
+    >
+
 </head>
+
 
 <body class="bg-gray-100">
 
-<div id="app"
-     class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl m-8">
+
+<div
+        id="app"
+        class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl m-8"
+>
+
 
     <div class="p-8">
 
-        <h1 class="uppercase tracking-wide text-sm text-indigo-500 font-semibold mb-4">
+
+        <!-- Título -->
+
+        <h1
+                class="uppercase tracking-wide text-sm text-indigo-500 font-semibold mb-4"
+        >
             {{ title }}
         </h1>
 
-        <form @submit.prevent class="space-y-4" novalidate>
 
-            <!-- Código -->
+        <form
+                @submit.prevent
+                class="space-y-4"
+                novalidate
+        >
+
+
+            <!-- ========================================= -->
+            <!-- Código                                    -->
+            <!-- ========================================= -->
+
             <div>
+
                 <label
                         for="code"
                         class="block text-gray-700 text-sm font-bold mb-2"
                 >
                     CODIGO:
                 </label>
+
 
                 <input
                         v-model="formData.code"
@@ -48,17 +78,48 @@
                         placeholder="Ej. POS-48-2023-00011"
                         class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                 >
+
             </div>
 
 
-            <!-- Tipo de documento -->
+            <!-- ========================================= -->
+            <!-- Checkbox animales                         -->
+            <!-- ========================================= -->
+
+            <div class="flex items-center">
+
+                <input
+                        id="soloAnimales"
+                        type="checkbox"
+                        v-model="soloAnimales"
+                        :disabled="loading"
+                        class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                >
+
+
+                <label
+                        for="soloAnimales"
+                        class="ml-2 text-sm font-medium text-gray-700"
+                >
+                    Solo documentos de animales
+                </label>
+
+            </div>
+
+
+            <!-- ========================================= -->
+            <!-- Tipo de documento                         -->
+            <!-- ========================================= -->
+
             <div>
+
                 <label
                         for="tipo"
                         class="block text-gray-700 text-sm font-bold mb-2"
                 >
                     TIPO DE DOCUMENTO:
                 </label>
+
 
                 <select
                         v-model="formData.tipo"
@@ -68,46 +129,87 @@
                         class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                 >
 
-                    <option value="" disabled>
+
+                    <option
+                            value=""
+                            disabled
+                    >
                         Seleccione un tipo
                     </option>
 
-                    <option value="EXTENSION">
-                        Extension
-                    </option>
 
-                    <option value="RENOVACION">
-                        Renovacion
-                    </option>
+                    <!-- ================================= -->
+                    <!-- Documentos normales                -->
+                    <!-- ================================= -->
 
-                    <option value="ENMIENDA">
-                        Enmienda
-                    </option>
+                    <template v-if="!soloAnimales">
 
-                    <option value="CONSTANCIA">
-                        Constancia
-                    </option>
+                        <option value="EXTENSION">
+                            Extension
+                        </option>
 
-                    <option value="INFORME">
-                        Informe
-                    </option>
 
-                    <option value="EXENTA">
-                        Exenta
-                    </option>
+                        <option value="RENOVACION">
+                            Renovacion
+                        </option>
 
-                    <option value="APROBACION">
-                        Aprobacion animal
-                    </option>
+
+                        <option value="ENMIENDA">
+                            Enmienda
+                        </option>
+
+
+                        <option value="CONSTANCIA">
+                            Constancia
+                        </option>
+
+
+                        <option value="INFORME">
+                            Informe
+                        </option>
+
+
+                        <option value="EXENTA">
+                            Exenta
+                        </option>
+
+                    </template>
+
+
+                    <!-- ================================= -->
+                    <!-- Documentos de animales             -->
+                    <!-- ================================= -->
+
+                    <template v-if="soloAnimales">
+
+                        <option value="APROBACION_ANIMAL">
+                            Aprobacion animal
+                        </option>
+
+
+                        <option value="ENMIENDA_ANIMAL">
+                            Enmienda animal
+                        </option>
+
+                    </template>
+
 
                 </select>
+
             </div>
 
 
-            <!-- Botones -->
-            <div class="flex flex-col sm:flex-row gap-3 pt-2">
+            <!-- ========================================= -->
+            <!-- Botones                                   -->
+            <!-- ========================================= -->
+
+            <div
+                    class="flex flex-col sm:flex-row gap-3 pt-2"
+            >
+
 
                 <!-- Word -->
+
                 <button
                         type="button"
                         @click="generarDocumento('word')"
@@ -115,18 +217,26 @@
                         class="flex-1 bg-blue-500 hover:bg-blue-700 disabled:opacity-60 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                 >
 
-                    <span v-if="!(loading && formato === 'word')">
+
+                    <span
+                            v-if="!(loading && formato === 'word')"
+                    >
                         Generar Word
                     </span>
 
-                    <span v-else>
+
+                    <span
+                            v-else
+                    >
                         Generando Word...
                     </span>
+
 
                 </button>
 
 
                 <!-- PDF -->
+
                 <button
                         type="button"
                         @click="generarDocumento('pdf')"
@@ -134,22 +244,34 @@
                         class="flex-1 bg-red-500 hover:bg-red-700 disabled:opacity-60 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                 >
 
-                    <span v-if="!(loading && formato === 'pdf')">
+
+                    <span
+                            v-if="!(loading && formato === 'pdf')"
+                    >
                         Generar PDF
                     </span>
 
-                    <span v-else>
+
+                    <span
+                            v-else
+                    >
                         Generando PDF...
                     </span>
 
+
                 </button>
 
+
             </div>
+
 
         </form>
 
 
-        <!-- Mensaje de éxito -->
+        <!-- ========================================= -->
+        <!-- Mensaje de éxito                          -->
+        <!-- ========================================= -->
+
         <p
                 v-if="mensaje"
                 class="mt-4 text-green-600"
@@ -158,7 +280,10 @@
         </p>
 
 
-        <!-- Mensaje de error -->
+        <!-- ========================================= -->
+        <!-- Mensaje de error                           -->
+        <!-- ========================================= -->
+
         <p
                 v-if="error"
                 class="mt-4 text-red-600"
@@ -166,16 +291,20 @@
             {{ error }}
         </p>
 
+
     </div>
+
 
 </div>
 
 
 <script type="module">
 
+
     const {
         createApp,
-        ref
+        ref,
+        watch
     } = Vue
 
 
@@ -183,16 +312,41 @@
 
         setup() {
 
+
+            // =========================================
+            // Título
+            // =========================================
+
             const title =
                 ref('Generar Documento')
 
 
+            // =========================================
+            // Datos del formulario
+            // =========================================
+
             const formData =
                 ref({
+
                     code: '',
+
                     tipo: ''
+
                 })
 
+
+            // =========================================
+            // Checkbox:
+            // Solo documentos de animales
+            // =========================================
+
+            const soloAnimales =
+                ref(false)
+
+
+            // =========================================
+            // Mensajes
+            // =========================================
 
             const mensaje =
                 ref('')
@@ -202,6 +356,10 @@
                 ref('')
 
 
+            // =========================================
+            // Estado de carga
+            // =========================================
+
             const loading =
                 ref(false)
 
@@ -210,17 +368,48 @@
                 ref('')
 
 
-            /*
-             * Obtiene el nombre del archivo
-             * desde Content-Disposition.
-             */
+            // =========================================
+            // Cuando cambia el checkbox
+            // =========================================
+            //
+            // Si se activa "Solo animales", eliminamos
+            // cualquier selección anterior que no sea
+            // un documento animal.
+            //
+            // =========================================
+
+            watch(
+                soloAnimales,
+                (nuevoValor) => {
+
+                    if (
+                        nuevoValor &&
+                        formData.value.tipo !== 'APROBACION_ANIMAL' &&
+                        formData.value.tipo !== 'ENMIENDA_ANIMAL'
+                    ) {
+
+                        formData.value.tipo = ''
+
+                    }
+
+                }
+            )
+
+
+            // =========================================
+            // Obtener nombre del archivo
+            // =========================================
+
             function filenameFromDisposition(
                 disposition,
                 fallback
             ) {
 
+
                 if (!disposition) {
+
                     return fallback
+
                 }
 
 
@@ -233,10 +422,16 @@
 
 
                 let m =
-                    reUtf8.exec(disposition)
+                    reUtf8.exec(
+                        disposition
+                    )
 
 
-                if (m && m[1]) {
+                if (
+                    m &&
+                    m[1]
+                ) {
+
 
                     try {
 
@@ -245,41 +440,54 @@
                         )
 
                     } catch (e) {
+
                     }
 
                 }
 
 
                 m =
-                    reName.exec(disposition)
+                    reName.exec(
+                        disposition
+                    )
 
 
-                if (m && m[1]) {
+                if (
+                    m &&
+                    m[1]
+                ) {
+
                     return m[1]
+
                 }
 
 
                 return fallback
+
             }
 
 
-            /*
-             * Generar documento.
-             *
-             * Todos los tipos de documento utilizan
-             * el mismo comportamiento mediante JSON.
-             */
+            // =========================================
+            // Generar documento
+            // =========================================
+
             const generarDocumento =
                 async (tipoFormato) => {
+
+
+                    // ---------------------------------
+                    // Limpiar mensajes
+                    // ---------------------------------
 
                     mensaje.value = ''
 
                     error.value = ''
 
 
-                    /*
-                     * Obtener código.
-                     */
+                    // ---------------------------------
+                    // Obtener código
+                    // ---------------------------------
+
                     const codigo =
                         (
                             formData.value.code ||
@@ -287,38 +495,63 @@
                         ).trim()
 
 
-                    /*
-                     * Obtener tipo.
-                     */
+                    // ---------------------------------
+                    // Obtener tipo
+                    // ---------------------------------
+
                     const tipoDocumento =
                         formData.value.tipo
 
 
-                    /*
-                     * Validación del código.
-                     */
+                    // ---------------------------------
+                    // Validar código
+                    // ---------------------------------
+
                     if (!codigo) {
 
                         error.value =
                             'El código es requerido.'
 
                         return
+
                     }
 
 
-                    /*
-                     * Validación del tipo.
-                     */
+                    // ---------------------------------
+                    // Validar tipo
+                    // ---------------------------------
+
                     if (!tipoDocumento) {
 
                         error.value =
                             'Debe seleccionar un tipo de documento.'
 
                         return
+
                     }
 
 
-                    loading.value = true
+                    // ---------------------------------
+                    // Validar coherencia del filtro
+                    // ---------------------------------
+
+                    if (
+                        soloAnimales.value &&
+                        tipoDocumento !== 'APROBACION_ANIMAL' &&
+                        tipoDocumento !== 'ENMIENDA_ANIMAL'
+                    ) {
+
+                        error.value =
+                            'Debe seleccionar un documento de animales.'
+
+                        return
+
+                    }
+
+
+                    loading.value =
+                        true
+
 
                     formato.value =
                         tipoFormato
@@ -326,40 +559,67 @@
 
                     try {
 
-                        /*
-                         * Mapeo del tipo seleccionado
-                         * al path del endpoint.
-                         */
+
+                        // =================================
+                        // Mapeo de endpoints
+                        // =================================
+
                         const endpointTipo = {
+
 
                             EXTENSION:
                                 'extencion',
 
+
                             RENOVACION:
                                 'renovacion',
+
 
                             ENMIENDA:
                                 'enmienda',
 
+
                             CONSTANCIA:
                                 'constancia',
+
 
                             INFORME:
                                 'informe',
 
+
                             EXENTA:
                                 'exenta',
 
-                            APROBACION:
-                                'aprobacion'
+
+                            APROBACION_ANIMAL:
+                                'aprobacionAnimal',
+
+
+                            ENMIENDA_ANIMAL:
+                                'enmiendaAnimal'
 
 
                         }[tipoDocumento]
 
 
-                        /*
-                         * Construir URL.
-                         */
+                        // ---------------------------------
+                        // Validar endpoint
+                        // ---------------------------------
+
+                        if (!endpointTipo) {
+
+                            error.value =
+                                'Tipo de documento no válido.'
+
+                            return
+
+                        }
+
+
+                        // =================================
+                        // Construir URL
+                        // =================================
+
                         const url =
                             '/document/' +
                             endpointTipo +
@@ -367,18 +627,20 @@
                             tipoFormato
 
 
-                        /*
-                         * Todos los documentos,
-                         * incluyendo ENMIENDA,
-                         * utilizan JSON.
-                         */
+                        // =================================
+                        // Request
+                        // =================================
+
                         const request = {
 
+
                             codigo:
-                            codigo,
+                                codigo,
+
 
                             tipoDocumento:
-                            tipoDocumento
+                                tipoDocumento
+
 
                         }
 
@@ -395,26 +657,35 @@
                         )
 
 
+                        // =================================
+                        // Ejecutar POST
+                        // =================================
+
                         const resp =
                             await fetch(
                                 url,
                                 {
 
-                                    method: 'POST',
+                                    method:
+                                        'POST',
 
-                                    headers: {
 
-                                        'Content-Type':
-                                            'application/json',
+                                    headers:
+                                        {
 
-                                        'Accept':
-                                            tipoFormato === 'pdf'
+                                            'Content-Type':
+                                                'application/json',
 
-                                                ? 'application/pdf'
 
-                                                : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                                            'Accept':
+                                                tipoFormato === 'pdf'
 
-                                    },
+                                                    ? 'application/pdf'
+
+                                                    : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+
+                                        },
+
 
                                     body:
                                         JSON.stringify(
@@ -425,13 +696,14 @@
                             )
 
 
-                        /*
-                         * ==================================
-                         * ERRORES HTTP
-                         * ==================================
-                         */
+                        // =================================
+                        // ERRORES HTTP
+                        // =================================
 
-                        if (resp.status === 400) {
+                        if (
+                            resp.status === 400
+                        ) {
+
 
                             const txt =
                                 await resp.text()
@@ -443,10 +715,14 @@
 
 
                             return
+
                         }
 
 
-                        if (resp.status === 404) {
+                        if (
+                            resp.status === 404
+                        ) {
+
 
                             const txt =
                                 await resp.text()
@@ -458,10 +734,14 @@
 
 
                             return
+
                         }
 
 
-                        if (resp.status >= 400) {
+                        if (
+                            resp.status >= 400
+                        ) {
+
 
                             const txt =
                                 await resp.text()
@@ -474,41 +754,42 @@
 
 
                             return
+
                         }
 
 
-                        /*
-                         * ==================================
-                         * OBTENER ARCHIVO
-                         * ==================================
-                         */
+                        // =================================
+                        // Obtener archivo
+                        // =================================
 
                         const blob =
                             await resp.blob()
 
 
-                        /*
-                         * Obtener nombre enviado
-                         * por el backend.
-                         */
+                        // =================================
+                        // Content-Disposition
+                        // =================================
+
                         const disposition =
                             resp.headers.get(
                                 'content-disposition'
                             )
 
 
-                        /*
-                         * Extensión por defecto.
-                         */
+                        // =================================
+                        // Extensión
+                        // =================================
+
                         const extension =
                             tipoFormato === 'pdf'
                                 ? 'pdf'
                                 : 'docx'
 
 
-                        /*
-                         * Nombre por defecto.
-                         */
+                        // =================================
+                        // Nombre por defecto
+                        // =================================
+
                         const fallbackName =
                             'document_' +
                             tipoDocumento.toLowerCase() +
@@ -518,9 +799,10 @@
                             extension
 
 
-                        /*
-                         * Obtener nombre final.
-                         */
+                        // =================================
+                        // Nombre final
+                        // =================================
+
                         const filename =
                             filenameFromDisposition(
                                 disposition,
@@ -528,10 +810,10 @@
                             )
 
 
-                        /*
-                         * Crear URL temporal
-                         * para descargar el archivo.
-                         */
+                        // =================================
+                        // Crear descarga
+                        // =================================
+
                         const urlObj =
                             window.URL.createObjectURL(
                                 blob
@@ -568,23 +850,18 @@
                         )
 
 
-                        /*
-                         * Mensaje de éxito.
-                         */
+                        // =================================
+                        // Mensaje de éxito
+                        // =================================
+
                         mensaje.value =
                             'Documento ' +
                             tipoFormato.toUpperCase() +
                             ' generado correctamente.'
 
 
-                        /*
-                         * Limpiar código después
-                         * de generar correctamente.
-
-                        formData.value.code = ''*/
-
-
                     } catch (e) {
+
 
                         console.error(
                             'Error generando documento:',
@@ -598,32 +875,50 @@
 
                     } finally {
 
+
                         loading.value =
                             false
 
+
                         formato.value =
                             ''
+
 
                     }
 
                 }
 
 
+            // =========================================
+            // Retorno
+            // =========================================
+
             return {
+
 
                 title,
 
+
                 formData,
+
+
+                soloAnimales,
+
 
                 mensaje,
 
+
                 error,
+
 
                 loading,
 
+
                 formato,
 
+
                 generarDocumento
+
 
             }
 
@@ -631,7 +926,10 @@
 
     }).mount('#app')
 
+
 </script>
 
+
 </body>
+
 </html>

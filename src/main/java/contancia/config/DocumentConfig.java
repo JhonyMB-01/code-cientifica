@@ -50,5 +50,8 @@ public class DocumentConfig {
     @ConfigProperty(name = "documentos.excel.animal")
     String excelAnimalFile;
 
+    @ConfigProperty(name = "documentos.plantilla.animal-enmienda")
+    String plantillaAnimalEnmienda;
+
 
 }

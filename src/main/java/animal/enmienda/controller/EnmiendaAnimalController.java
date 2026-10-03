@@ -1,6 +1,6 @@
-package animal.aprobacion.controller;
+package animal.enmienda.controller;
 
-import animal.aprobacion.service.DocumentAprovacionService;
+import animal.enmienda.service.DocumentEnmiendaAnimalService;
 import extencion.dto.GenerarDocumentoRequest;
 import extencion.dto.GenerarPdfResponse;
 import jakarta.inject.Inject;
@@ -10,14 +10,13 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import renovacion.service.DocumentRenovacionService;
 import utils.GenerarWordResponse;
 
-@Path("/document/aprobacionAnimal/v1")
-public class AprobacionAnimalController {
+@Path("/document/enmiendaAnimal/v1")
+public class EnmiendaAnimalController {
 
     @Inject
-    DocumentAprovacionService aprovacionService;
+    DocumentEnmiendaAnimalService enmiendaService;
 
     @POST
     @Path("/word")
@@ -40,7 +39,7 @@ public class AprobacionAnimalController {
 
         try {
 
-            GenerarWordResponse response = aprovacionService
+            GenerarWordResponse response = enmiendaService
                     .generarWordRenovacion(request);
 
             byte[] documento = response.getPdfContent();
@@ -77,7 +76,7 @@ public class AprobacionAnimalController {
 
         try {
 
-            GenerarPdfResponse pdfResponse = aprovacionService.generarPdf(request);
+            GenerarPdfResponse pdfResponse = enmiendaService.generarPdf(request);
 
             byte[] documento = pdfResponse.getPdfContent();
             String nombreArchivo = pdfResponse.getNamePdfGenerate();
