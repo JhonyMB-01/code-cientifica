@@ -53,5 +53,11 @@ public class DocumentConfig {
     @ConfigProperty(name = "documentos.plantilla.animal-enmienda")
     String plantillaAnimalEnmienda;
 
+    @ConfigProperty(name = "documentos.plantilla.animal-extencion")
+    String plantillaAnimalExtencion;
+
+    @ConfigProperty(name = "documentos.plantilla.animal-renovacion")
+    String plantillaAnimalRenovacion;
+
 
 }

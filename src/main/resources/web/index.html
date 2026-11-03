@@ -191,6 +191,14 @@
                             Enmienda animal
                         </option>
 
+                        <option value="EXTENCION_ANIMAL">
+                            Extension animal
+                        </option>
+
+                        <option value="RENOVACION_ANIMAL">
+                            Renovacion animal
+                        </option>
+
                     </template>
 
 
@@ -385,8 +393,10 @@
                     if (
                         nuevoValor &&
                         formData.value.tipo !== 'APROBACION_ANIMAL' &&
-                        formData.value.tipo !== 'ENMIENDA_ANIMAL'
-                    ) {
+                        formData.value.tipo !== 'ENMIENDA_ANIMAL' &&
+                        formData.value.tipo !== 'EXTENCION_ANIMAL' &&
+                        formData.value.tipo !== 'RENOVACION_ANIMAL'
+                ) {
 
                         formData.value.tipo = ''
 
@@ -538,7 +548,9 @@
                     if (
                         soloAnimales.value &&
                         tipoDocumento !== 'APROBACION_ANIMAL' &&
-                        tipoDocumento !== 'ENMIENDA_ANIMAL'
+                        tipoDocumento !== 'ENMIENDA_ANIMAL' &&
+                        formData.value.tipo !== 'EXTENCION_ANIMAL' &&
+                        formData.value.tipo !== 'RENOVACION_ANIMAL'
                     ) {
 
                         error.value =
@@ -596,8 +608,13 @@
 
 
                             ENMIENDA_ANIMAL:
-                                'enmiendaAnimal'
+                                'enmiendaAnimal',
 
+                            EXTENCION_ANIMAL:
+                                'extencionAnimal',
+
+                            RENOVACION_ANIMAL:
+                                'renovacionAnimal'
 
                         }[tipoDocumento]
 
